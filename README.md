@@ -12,11 +12,16 @@
 - Is there one region that stands out over time?
 
 ### Graph ideas
-- Internet use on a regional basis normalised for GDP
+- PCA etc. (Tassilo)
+- Internet use on a regional basis normalised for GDP (Conor)
 - Line plot of Countries with additional trend lines for regions against time
+- Geography plot of happiness
+
 
 ## Report Order
-- Opening Questions
-- Datasets and pre-processing
-- Preliminary analyses - Correlation matrices, regression, PCA, and SOM
-- 
+- Opening Questions (Map of Happiness)
+- (T) Datasets and pre-processing
+- (T) Preliminary analyses - Boxplots, scale data?, correlation matrices, regression, PCA (Colour by region) + biplot (or PLS), and SOM (2018) 
+- Over time analysis
+- (C) 2018 specific influences
+- Future work
