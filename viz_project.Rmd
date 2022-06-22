@@ -24,6 +24,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Happiness over time?
 
+geography map (color each country base on the percentage change over time (2015-2022))
+
+
+
 ## What influences happiness
 
 ## Future work
