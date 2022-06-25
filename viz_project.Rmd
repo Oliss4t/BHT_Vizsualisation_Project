@@ -1,12 +1,17 @@
 ---
-title: "Vizualization on the Happines Dataset including Tabacco, Alcohole and Internet consumption"
+title: Vizualization on the Happines Dataset including Tabacco, Alcohole and Internet
+  consumption
 author: "Conor Fallon; Tassilo Henninger"
 date: "22 6 2022"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(kableExtra)
 ```
 
 ## Opening Questions
@@ -14,6 +19,53 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Happiness over time?
 
 ## Datasets and pre-processing
+
+Our base dataset is the [World Happiness Report](https://www.kaggle.com/datasets/mathurinache/world-happiness-report) ranging from 2015 to 2022. The World Happiness Report is a publication of the United Nations Sustainable Development Solutions Network. It contains articles and rankings of national happiness, based on respondent ratings of their own lives, which the report also correlates with various life factors.
+The dataset contains 12 columns, 1237 rows and can be seen in the table below. 
+As our goal is to analyse the factors of happiness, the following six columns are most important for us: GDP, Family, Health, Freedom, Corruption and Generosity.
+```{r, echo=FALSE}
+h_sample_2015 <- read.csv(file = './data/happy/2015.csv')
+kable(h_sample_2015[1:3,], "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+```
+
+In addition, we wanted to add futher factors and added the following three datasets:
+
+* [smoking dataset](https://ourworldindata.org/smoking): 
+* [alcohol dataset](https://www.kaggle.com/datasets/pralabhpoudel/alcohol-consumption-by-country?resource=download)
+* [internet dataset](https://data.worldbank.org/indicator/IT.NET.USER.ZS)
+
+By merging the datasets we have now four additional factors:
+
+* Prevalence of current tobacco use (% of adults)
+* Population (historical estimates)
+* Total alcohol consumption per capita (liters of pure alcohol, projected estimates, 15+ years of age)
+* Individuals using the Internet (% of population)
+
+To join all the different datasets we had to do some manual preprocessing which can be seen in the [preprocessing](./preprocessing.ipynb) step.
+The main steps where cleaning the data (region, countrycode, NaN) and joining the datasets based on the year and the countrycode.
+
+After joining we noticed, that the three additional data sets do not contain data for the whole timespan 2015-2022.(fig. missing values full data)
+Therefore, we decided to create two datasets. One for analysing the happiness change over time and one for analysing the influential factors regarding happiness in only one year.
+
+For the first dataset, the [over time analysis]("./data/preprocessed_data_happy_incl_region_no_nan.csv"), we only included the 6 factors from the base happiness dataset and excluded all rows containing missing values. 
+```{r, echo=FALSE}
+data_over_time <- read.csv(file = './data/preprocessed_data_happy_incl_region_no_nan.csv')
+kable(data_over_time[1:3,3:ncol(data_over_time)], "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+```
+
+
+For the second dataset, the [influential factors analysis]("./data/preprocessed_data_2018_no_nan.csv"), we inspected the missing values of each year and choose the year with the lowes missing values, year 2018 (fig "missing values 2018"). Then we excluded all rows containing missing values again. Figure "missing values 2017" shows e.g. that the smoking and the alcohol dataset did not contain any values for the year 2017. 
+```{r, echo=FALSE}
+data_2018 <- read.csv(file = './data/preprocessed_data_2018_no_nan.csv')
+kable(data_2018[1:3,2:ncol(data_2018)], "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+```
+
+![missing values full data](./figs/full_data_missing_values.png)
+
+![missing values 2017](./figs/2017_missing_values.png)
+
+
+![missing values 2018](./figs/2018_missing_values.png)
 
 ## Preliminary analyses
 ### Boxplots, scale data?,
@@ -31,27 +83,3 @@ geography map (color each country base on the percentage change over time (2015-
 ## What influences happiness
 
 ## Future work
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-```
-
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
