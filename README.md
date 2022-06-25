@@ -1,5 +1,7 @@
 # BHT_Vizsualisation_Project
 
+The html rendered version can be accessed by: https://htmlpreview.github.io/?https://github.com/Oliss4t/BHT_Vizsualisation_Project/blob/main/viz_project.html
+
 - Examine levels of internet usage in a single country year-by-year
 - Try geom_flag() from ggimage
 
