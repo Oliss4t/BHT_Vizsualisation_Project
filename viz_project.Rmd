@@ -16,6 +16,9 @@ library(plotly)
 library(scales)
 library(GGally)
 library(reshape2)
+library(car)
+require("glmnet")
+
 ```
 
 ## Opening Questions
@@ -62,6 +65,7 @@ For the second dataset, the [influential factors analysis]("./data/preprocessed_
 
 ```{r, echo=FALSE}
 data_2018 <- read.csv(file = './data/preprocessed_data_2018_no_nan.csv')
+data_2018$Region <- as.factor(data_2018$Region)
 kable(data_2018[1:3,1:ncol(data_2018)], "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
@@ -78,15 +82,16 @@ One of the objectives of preliminary data analysis to get a feel for the data yo
 
 ### Boxplots, scale data?
 ```{r echo=FALSE}
-correlation_categories <- c("Happiness","Economy","Family","Health","Freedom","Trust","Generosity","Alcohol","Population","Tobacco","Internet")
+correlation_categories <- c("Happiness","Economy","Family","Health","Freedom","Trust","Generosity","Alcohol","Population","Tobacco","Internet", "Region")
 ```
 First we check via the summary how all the explanatory variables are distributed. As we can see they are on different scales, especially "population" and "Internet usage". As we don't want to have the following analysis be more driven on the larges distances, we scale them by $\frac{(x - mean(x))}{sd(x)}$
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
 summary(data_2018[,correlation_categories])
 ```
 ```{r echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
-scaled_data_factors <- data.frame(scale(data_2018[,correlation_categories]))
+not_scaled_data_factors <- data.frame(data_2018[,correlation_categories[-12]])
+scaled_data_factors <- data.frame(scale(data_2018[,correlation_categories[-12]]))
 
 data_long <- melt(scaled_data_factors) 
 ggplot(data_long, aes(x = variable, y = value)) +
@@ -94,6 +99,102 @@ ggplot(data_long, aes(x = variable, y = value)) +
 
 ```
 
+We can see that every factor is now on the same scale. We have some outliers for Family, Freedom, Trust, Generosity and Population.
+
+### correlation matrix
+
+On the correlation matrix plot we see, that happiness has the stronges correlation with Economy (0.833) and Internet (0.817).
+For the correlations between the explanatory variables the following stand out:
+
+* 0.934: Economy and Internet
+* 0.875: Economy and Health
+* 0.864: Internet and Health
+* 0.741: Family and Economy
+* 0.728: Internet and Family
+
+```{r echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
+ggpairs(scaled_data_factors, title="correlation matrix for influential factors analysis", )
+```
+
+
+### regression
+
+One tool for getting a first glance on what influences happiness is linear regression. For the regression we use the unscaled data. If our linear model has good predictability, we can interpret the coefficients on how they influence the outcome. This is also called regression analysis, where the goal is to isolate the relationship between each explanatory variable and the outcome variable.
+
+However, the interpretability assumes that you can only change the value of  one explanatory variable and not the others at the same time. This of course is only true if there are no correlations between the explanatory variables. If this independence does not hold, we have a problem of multicollinearity. This can result in the coefficients swingging wildly based on which other independent variables are in the model. Therefore the coefficients become very sensitive to small changes in the model and can not be easily interpreted.
+
+One way to asses how strong the explanatory variables are affected by multicollinearity is using the variance inflation factor (VIF). VIFs identify correlations and their strength. VIFs between 1 and 5 suggest that there is a small correlation, VIFs greater than 5 represent critical levels of multicollinearity where the coefficients are poorly estimated. 
+
+If we build a linear regression model on all explanatory variables, we get an **R-squared of 0.8303**. However, by plotting the VIF values we can see that a model based on all explanatory variables has severe multicollinearity. Therefore we can not interprete the coefficients for Internet and Economy.
+
+
+```{r echo=FALSE, message=TRUE}
+lm1 <- lm(Happiness ~ . , data = not_scaled_data_factors)
+summary(lm1)
+vif_values <- vif(lm1)
+par(mar=c(2,6,2,2))
+barplot(vif_values, main = "VIF Values Full Model", horiz = TRUE, col = "blue", las=1)
+abline(v = 5, lwd = 3, lty = 2)
+
+```
+
+If we build a linear regression model without Internet and Economy, we get an **R-squared of 0.7924**. This R-squared is lower than prior, but after plotting the VIF values we can see that we are allowed to interprete the coefficients for the remaining explanatory variables.
+
+Interesting is that only Family, Health and Tabacco is statistically significant:
+
+* Family has an positive effect on the Happiness Score. One unit change on Family results in an absolute Happiness increase of **15.98**
+* Health has an positive effect on the Happiness Score. One unit change on Health results in an absolute Happiness increase of **24.04**
+* Tobacco has an negative effect on the Happiness Score. One unit change on Tobacco results in an absolute Happiness decrease of **-0.01884**
+
+```{r echo=FALSE, message=TRUE}
+lm2 <- lm(Happiness ~ . -Internet - Economy , data = not_scaled_data_factors)
+summary(lm2)
+vif_values2 <- vif(lm2)
+par(mar=c(2,6,2,2))
+barplot(vif_values2, main = "VIF Values Model -Internet & -Economy", horiz = TRUE, col = "blue", las=1)
+abline(v = 5, lwd = 3, lty = 2)
+
+```
+Next we tried out the linear regrssion methods with shrinkage. For Lasso and Ridge regression all predictor variables should be scaled so that they
+have the same standard deviation. Otherwise, the predictor variables have weighting in the penalty term. The glmnet() function however standardises the predictors by default and the output coefficients are recalculated to apply to the original scale.
+
+The Ridge regression 
+
+
+
+```{r}
+x <- model.matrix(Happiness ~ . -Internet - Economy , data = not_scaled_data_factors)[, -1]
+y <- not_scaled_data_factors$Happiness
+
+"Ridge Regression"
+ridge.out <- cv.glmnet(x,y, alpha = 0)
+coef(ridge.out)
+```
+
+The Lasso Regression
+
+
+```{r}
+
+"Lasso Regression"
+lasso.out <- cv.glmnet(x,y, alpha = 1)
+coef(lasso.out)
+```
+
+
+### PCA (Colour by region) + biplot (or PLS)
+
+
+### SOM
+
+
+## How does happiness change over time?
+
+geography map (color each country base on the percentage change over time (2015-2022))
+
+
+
+## What further influences happiness?
 
 ```{r}
 box <- ggplot(data_2018, aes(x = Region, y = Happiness, color = Region), ) +
@@ -104,25 +205,5 @@ box <- ggplot(data_2018, aes(x = Region, y = Happiness, color = Region), ) +
   theme(legend.position="none")
 ggplotly(box)
 ```
-```{r}
-colnames(data_2018)
-correlation_data <- data_2018[,correlation_categories]
-ggpairs(correlation_data, title="correlation matrix for influential factors analysis", )
-```
-
-
-
-### correlation matrices
-### regression
-### PCA (Colour by region) + biplot (or PLS)
-### SOM (2018)
-
-## Happiness over time?
-
-geography map (color each country base on the percentage change over time (2015-2022))
-
-
-
-## What influences happiness
 
 ## Future work
