@@ -1,4 +1,4 @@
-,Country,Happiness Rank,Happiness Score,Economy (GDP per Capita),Family,Health (Life Expectancy),Freedom,Trust (Government Corruption),Generosity,Year,Region,Country Code,Code,"Total alcohol consumption per capita (liters of pure alcohol, projected estimates, 15+ years of age)",Population (historical estimates),Prevalence of current tobacco use (% of adults),Individuals using the Internet (% of population)
+,Country,Happiness Rank,Happiness,Economy,Family,Health,Freedom,Trust,Generosity,Year,Region,Country Code,Code,Alcohol,Population,Tobacco,Internet
 0,Switzerland,1,7.587,1.39651,1.34951,0.94143,0.66557,0.41978,0.29678,2015,Western Europe,CH,CHE,11.58,8296775.0,,87.4790556
 1,Iceland,2,7.561,1.30232,1.40223,0.94784,0.62877,0.14145,0.4363,2015,Western Europe,IS,ISL,8.74,330237.0,,98.2
 2,Denmark,3,7.527,1.32548,1.36058,0.87464,0.64938,0.48357,0.34139,2015,Western Europe,DK,DNK,10.36,5688695.0,,96.33050162
