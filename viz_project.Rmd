@@ -187,11 +187,102 @@ coef(lasso.out)
 
 ### SOM
 
+![SOM Fanplot (2015)](./figs/fanplot.png)
+
+![Mappings for SOM](./figs/mapping.png)
 
 ## How does happiness change over time?
 
+# Animation
+
+![Alt Text](./figs/plot_gdpPercap_lifeExp.gif)
+
 geography map (color each country base on the percentage change over time (2015-2022))
 
+```{r echo=FALSE, message=TRUE}
+library(knitr)
+library(plotly)
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+
+
+map.world <- map_data("world")
+
+full <- read.csv('https://raw.githubusercontent.com/Oliss4t/BHT_Vizsualisation_Project/main/data/preprocessed_data.csv')
+
+full$Country <- recode(full$Country,
+                       "Congo (Brazzaville)"="Republic of Congo",
+                       "Congo (Kinshasa)"="Democratic Republic of the Congo",
+                       "Hong Kong"="China",
+                       "Hong Kong S.A.R., China"="China",
+                       "North Cyprus"="Cyprus",
+                       "Palestinian Territories"="Palestine",
+                       "Somaliland region"="Somalia",
+                       "Trinidad and Tobago"="Trinidad",
+                       "United Kingdom"="UK",
+                       "United States"="USA",
+                       "Somaliland Region"="Somalia",
+                       "Taiwan Province of China"="Taiwan")
+full <- arrange(full, Country)
+
+full <- subset(full, select = -c(X))
+
+names(full) <- c("country", "rank", "happiness", "economy", "family", "health", "freedom", "trust", "generosity", "year", "region", "ccode", "code", "alcohol", "population", "tobacco", "internet")
+
+full$year <- as.factor(full$year)
+
+#generating standardized data by year
+df.5 <- filter(full, year == 2015)
+df22 <- filter(full, year == 2022)
+
+#data for change over time
+df.change <- left_join(df.5,df22, by = "country")
+df.change <- mutate(df.change,
+                    h.diff = happiness.x-happiness.y,
+                    e.diff = economy.x-economy.y,
+                    f.diff = family.x-family.y,
+                    he.diff = health.x-health.y,
+                    fr.diff = freedom.x-freedom.y,
+                    t.diff = trust.x-trust.y,
+                    g.diff = generosity.x-generosity.y)
+df.change <- select(df.change, country, region.x, h.diff, e.diff, f.diff, he.diff, fr.diff, t.diff, g.diff)
+names(df.change) <- c("country", "region", "happiness", "economy", "family", "health", "freedom", "trust", "generosity")
+
+
+
+for (i in 1:7) {
+  df.change[,i+2] <- round(df.change[,i+2], 3)
+}
+
+map.world1 <- left_join(map.world, df.change, by = c('region' = 'country'))
+
+
+#Diverging Color Palette 
+
+
+###install.packages("devtools")    
+### devtools::install_github("kwstat/pals")   
+library(pals)
+pal.bands(ocean.balance, ocean.delta, ocean.curl, main = "cmocean") 
+
+coolwarm_hcl <- colorspace::diverging_hcl(100,
+                                          h = c(250, 10), c = 100, l = c(37, 88), power = c(0.7, 1.7))
+ggplotchange <- ggplot(data = map.world1, aes(x = long, y = lat, group = group, fill = happiness, text  = paste("Country:", region, "<br>", "Happiness:", -happiness, "<br>", "Economy:", economy, "<br>", "Family:", family, "<br>", "Health:", -health, "<br>", "Freedom:", -freedom, "<br>", "Trust:", trust, "<br>", "Generosity:", generosity))) +
+  geom_polygon() +
+  scale_fill_gradientn(colors = ocean.curl(150)) +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_blank(),
+    plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Change from 2015 to 2022") +
+  guides(fill = guide_legend(title=NULL))
+ggplotly(ggplotchange, tooltip = c("text"))
+
+```
 
 
 ## What further influences happiness?
@@ -204,6 +295,82 @@ box <- ggplot(data_2018, aes(x = Region, y = Happiness, color = Region), ) +
   coord_flip() + 
   theme(legend.position="none")
 ggplotly(box)
+```
+
+# Tobacco Consumption
+
+```{r echo=FALSE, message=TRUE}
+library(viridis)
+library(tidyverse)
+library(plotly)
+library(ggpubr)
+#setwd('~/Documents/M/Semester 2/Visualisation')
+happy <- read.csv('https://raw.githubusercontent.com/Oliss4t/BHT_Vizsualisation_Project/main/data/preprocessed_data_2018_no_nan.csv')
+
+data("happiness", package = "zenplots")
+
+tobaccohappy <- left_join(as.data.frame(happiness), as.data.frame(happy[ ,c("Country","Tobacco")]), by = 'Country')
+
+tobaccohappy <- tobaccohappy[,-7]
+
+d <- highlight_key(tobaccohappy,
+                   ~Region)
+
+p <-ggplot(d, aes(x = Tobacco, y = Happiness, group = Region, 
+                  color = Region, text = Country)) + 
+  labs(y= "Happiness Score", x = "Tobacco Consumption (%)", title = "Tobacco and Happiness") + 
+  geom_smooth(aes(group = Region), method = "lm", se = FALSE, size = 0.5) + 
+  geom_point(aes(size = GDP)) +
+  theme_bw() + 
+  scale_color_manual(values = rainbow(10, alpha = 0.7)) +
+  scale_size_continuous(range = c(0, 10), name = '')
+
+gg <- ggplotly(p, tooltip = "text") %>% 
+  highlight(on = 'plotly_click', off = 'plotly_doubleclick', 
+            opacityDim = .05)
+
+# First, make the lines invisible (because no groups are highlighted)
+# Remove the line legend; add the point legend
+invisible(
+  lapply(1:length(gg$x$data),
+         function(j){
+           nm <- gg$x$data[[j]]$name
+           md <- gg$x$data[[j]]$mode
+           if(md == "lines") {
+             gg$x$data[[j]]$visible <<- FALSE
+             gg$x$data[[j]]$showlegend <<- FALSE
+           } else {
+             gg$x$data[[j]]$visible <<- TRUE
+             gg$x$data[[j]]$showlegend <<- TRUE
+           }
+         }
+  ))
+
+gg %>% htmlwidgets::onRender(
+  "function(el, x){
+    v = [] /* establish outside of the events; used for both */
+    for (i = 0; i < 22; i++) {  /*1st 11 are lines; 2nd 11 are points */
+      if(i < 12){
+        v[i] = false;
+      } else {
+        v[i] = true;
+      }
+    }
+    console.log(x);
+    el.on('plotly_click', function(d) {
+      cn = d.points[0].curveNumber - 10;  /*if [8] is the lines, [18] is the points*/
+      v2 = JSON.parse(JSON.stringify(v)); /*create a deep copy*/
+      v2[cn] = true;
+      update = {visible: v2};
+      Plotly.restyle(el.id, update); /* in case 1 click to diff highlight */
+    });
+    el.on('plotly_doubleclick', function(d) {
+        console.log('out ', d);
+        update = {visible: v}
+        console.log('dbl click ' + v);
+        Plotly.restyle(el.id, update);
+    });
+  }")
 ```
 
 ## Future work
