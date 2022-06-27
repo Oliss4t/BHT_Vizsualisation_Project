@@ -128,7 +128,7 @@ One way to asses how strong the explanatory variables are affected by multicolli
 If we build a linear regression model on all explanatory variables, we get an **R-squared of 0.8303**. However, by plotting the VIF values we can see that a model based on all explanatory variables has severe multicollinearity. Therefore we can not interprete the coefficients for Internet and Economy.
 
 
-```{r echo=FALSE, message=TRUE}
+```{r echo=FALSE, message=FALSE}
 lm1 <- lm(Happiness ~ . , data = not_scaled_data_factors)
 summary(lm1)
 vif_values <- vif(lm1)
@@ -146,7 +146,7 @@ Interesting is that only Family, Health and Tabacco is statistically significant
 * Health has an positive effect on the Happiness Score. One unit change on Health results in an absolute Happiness increase of **24.04**
 * Tobacco has an negative effect on the Happiness Score. One unit change on Tobacco results in an absolute Happiness decrease of **-0.01884**
 
-```{r echo=FALSE, message=TRUE}
+```{r echo=FALSE, message=FALSE}
 lm2 <- lm(Happiness ~ . -Internet - Economy , data = not_scaled_data_factors)
 summary(lm2)
 vif_values2 <- vif(lm2)
@@ -199,7 +199,7 @@ coef(lasso.out)
 
 geography map (color each country base on the percentage change over time (2015-2022))
 
-```{r echo=FALSE, message=TRUE}
+```{r echo=FALSE, message=FALSE}
 library(knitr)
 library(plotly)
 library(ggplot2)
@@ -264,8 +264,6 @@ map.world1 <- left_join(map.world, df.change, by = c('region' = 'country'))
 ###install.packages("devtools")    
 ### devtools::install_github("kwstat/pals")   
 library(pals)
-pal.bands(ocean.balance, ocean.delta, ocean.curl, main = "cmocean") 
-
 coolwarm_hcl <- colorspace::diverging_hcl(100,
                                           h = c(250, 10), c = 100, l = c(37, 88), power = c(0.7, 1.7))
 ggplotchange <- ggplot(data = map.world1, aes(x = long, y = lat, group = group, fill = happiness, text  = paste("Country:", region, "<br>", "Happiness:", -happiness, "<br>", "Economy:", economy, "<br>", "Family:", family, "<br>", "Health:", -health, "<br>", "Freedom:", -freedom, "<br>", "Trust:", trust, "<br>", "Generosity:", generosity))) +
@@ -299,7 +297,7 @@ ggplotly(box)
 
 # Tobacco Consumption
 
-```{r echo=FALSE, message=TRUE}
+```{r echo=FALSE, message=FALSE}
 library(viridis)
 library(tidyverse)
 library(plotly)
