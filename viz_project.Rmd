@@ -12,98 +12,135 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 library(knitr)
 library(kableExtra)
+require(gridExtra)
 library(plotly)
 library(scales)
 library(GGally)
 library(reshape2)
 library(car)
+library(rgl)
+library(ggplot2)
 require("glmnet")
 log(1000000)
 
 ```
 
-## Opening Questions
-### What influences happiness?
-### Happiness over time?
-
 ## Happiness Dataset
 
-The World Happiness Report is a landmark survey of the state of global happiness.The happiness scores and rankings use data from the Gallup World Poll. The scores are based on answers to the main life evaluation question asked in the poll. This question, known as the Cantril ladder, asks respondents to think of a ladder with the best possible life for them being a 10 and the worst possible life being a 0 and to rate their own current lives on that scale. The scores are from nationally representative samples and use the Gallup weights to make the estimates representative. The columns following the happiness score estimate the extent to which each of six factors – economic production, social support, life expectancy, freedom, absence of corruption, and generosity – contribute to making life evaluations higher in each country than they are in Dystopia, a hypothetical country that has values equal to the world’s lowest national averages for each of the six factors. They have no impact on the total score reported for each country, but they do explain why some countries rank higher than others.
+The World Happiness Report is a landmark survey of the state of global happiness.The happiness scores and rankings use data from the Gallup World Poll (GWP). The scores are based on answers to the main life evaluation question asked in the poll. This question, known as the Cantril ladder, asks respondents to think of a ladder with the best possible life for them being a 10 and the worst possible life being a 0 and to rate their own current lives on that scale.
 
-The Cantril Self-Anchoring Scale, developed by pioneering social researcher Dr. Hadley Cantril, consists of the following:
+Further, the Happiness Report includes additional 6 factors (levels of GDP, life expectancy, generosity, social support, freedom, and corruption) which show the estimated extent to which each of the six factor is estimated to contribute to making life evaluations (happiness score) higher in each country than in Dystopia. The underlying raw datapoints for those estimations are provided by other organisations (e.g. WHO) or from the Gallup World Poll question results. Dystopia in this context, is a hypothetical country with values equal to the world’s lowest national averages for each of the six factors raw values. The purpose in establishing Dystopia is to have a benchmark against which all countries can be favorably compared (no country performs more poorly than Dystopia) in terms of each of the six key variables. Since life would be very unpleasant in a country with the world’s lowest incomes, lowest life expectancy, lowest generosity, most corruption, least freedom, and least social support, it is referred to as “Dystopia,” in contrast to Utopia.
 
-Please imagine a ladder with steps numbered from zero at the bottom to 10 at the top.
-The top of the ladder represents the best possible life for you and the bottom of the ladder represents the worst possible life for you.
-On which step of the ladder would you say you personally feel you stand at this time? (ladder-present)
+Thus, each of the 6 factors values explain the contribution of each factor for the higher happiness score in a certain  country than in Dystopia. That is why the happiness score can be calculated by: $$\sum_{i=1}^{6} factorvalue_i + dystopiahappiness + residual $$
 
+This makes it clear, that the 6 factors are already the result of some sort of estimation and therefore cannot be used for analysing the variable importance. The resulting regression coefficients e.g. would not be helpful at all,  as by including the residual in the dataset, the interception would be 0 and all the coefficients would result in 1.
+
+That is why we looked for an additional version of the happiness dataset, which includes the actual raw values and which we can therefore use for analysing the variable importance and use in data dimension reduction steps.
+
+## Report questions based on the Happiness Datasets
+
+Based on the happiness dataset we want to try to answer the follwing leading questions.
+### What influences happiness?
+Can happiness be explained by certain factors?
+What are those factors and how much do they influence the happiness?
+For this questions we need the raw values to build our analysis on top.
+To answer this questions we decided to add additional factors which might explain the different happiness levels.
+We were interested in how drug abuse correlates with happiness and found suiting datasets for alcohol consumption and tabaco consumtion.
+Additionally we were intereseted in how the modern user of social media influeces happiness. However we only found a fitting internet dataset which captures the percentage of the individuals in a country which is using the Internet.
+### Happiness over time?
+For the change of happiness we can use the plain happiness dataset as it captures the happiness scores  and the explained by parts for the 6 factors over time. Therefore we can calculate an visualize the changes over time.
 
 ## Datasets and pre-processing
-
-Our base dataset is the [World Happiness Report](https://www.kaggle.com/datasets/mathurinache/world-happiness-report) ranging from 2015 to 2022. The World Happiness Report is a publication of the United Nations Sustainable Development Solutions Network. It contains articles and rankings of national happiness, based on respondent ratings of their own lives, which the report also correlates with various life factors.
-The dataset contains 12 columns, 1237 rows and can be seen in the table below. 
-As our goal is to analyse the factors of happiness, the following six columns are most important for us: GDP, Family, Health, Freedom, Corruption and Generosity.
+For answering our two main questions we decided for the given reasons to create two datasets.
+### over time dataset
+For the answering the happiness change over time we used the data from the [World Happiness Report](https://www.kaggle.com/datasets/mathurinache/world-happiness-report) which is ranging from 2015 to 2022. An example of 2015 can be seen in the table below. 
 ```{r, echo=FALSE}
 h_sample_2015 <- read.csv(file = './data/happy/2015.csv')
 kable(h_sample_2015[1:3,], "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
-In addition, we wanted to add futher factors and added the following three datasets:
+To get our final dataset we had to do some [preprocessing](./preprocessing.ipynb), which included joining the individual year files, renaming the columns and cleaning the data (region, NaN).
+The dataset has 1185 rows and 11 columns. The resulting [over time dataset](./data/preprocessed_data_happy_incl_region_no_nan.csv) can be seen below.
+```{r, echo=FALSE}
+h_sample_2015 <- read.csv(file = './data/preprocessed_data_happy_incl_region_no_nan.csv', sep=";" )
+kable(h_sample_2015[1:3,2:12], "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+```
+
+
+### influential factors dataset
+
+For answering the questions "What influences happiness?" we had to use the [raw data](./data/until_2018_raw_values.csv) of the factors and not their "explained by" values. In addition, we wanted to add futher factors and added the following three datasets:
 
 * [smoking dataset](https://ourworldindata.org/smoking): 
 * [alcohol dataset](https://www.kaggle.com/datasets/pralabhpoudel/alcohol-consumption-by-country?resource=download)
 * [internet dataset](https://data.worldbank.org/indicator/IT.NET.USER.ZS)
 
-By merging the datasets we have now four additional factors:
+By merging the datasets we have now four additional factors.
 
-* Prevalence of current tobacco use (% of adults)
-* Population (historical estimates)
-* Total alcohol consumption per capita (liters of pure alcohol, projected estimates, 15+ years of age)
-* Individuals using the Internet (% of population)
-
-To join all the different datasets we had to do some manual preprocessing which can be seen in the [preprocessing](./preprocessing.ipynb) step.
+To join all the different datasets we had to do some preprocessing which can be seen in the [preprocessing](./preprocessing.ipynb) step.
 The main steps where cleaning the data (region, countrycode, NaN) and joining the datasets based on the year and the countrycode.
 
 After joining we noticed, that the three additional data sets do not contain data for the whole timespan 2015-2022.(fig. missing values full data)
-Therefore, we decided to create two datasets. One for analysing the happiness change over time and one for analysing the influential factors regarding happiness in only one year.
+Therefore, we decided to use only one year for analysing the influential factors.
 
-For the first dataset, the [over time analysis]("./data/preprocessed_data_happy_incl_region_no_nan.csv"), we only included the 6 factors from the base happiness dataset and excluded all rows containing missing values. We also renamed the columns for having shorter labels.
+![missing values full data](./figs/full_data_missing_values.png)
+
+We inspected the missing values of each year and choose the year with the lowes missing values, year 2018 (fig "missing values 2018"). Then we excluded all rows containing missing values again. Figure "missing values 2017" shows e.g. that the smoking and the alcohol dataset did not contain any values for the year 2017.  We also renamed the columns for having shorter labels. 
+
+The final [influential factors dataset](./data/preprocessed_raw_2018_no_nan.csv) consists of 96 rows (countries for the year 2018) and 18 columns which quickly explained.
+A more detailed explanation can be seen in the [Statistical Appendix](https://s3.amazonaws.com/happiness-report/2018/Appendix1ofChapter2.pdf) of the world happiness report.
+
+* Country
+* Year
+* Happiness: happiness score
+* Economy: Log GDP per capita
+* Social: (support) national average of the binary responses (either 0 or 1) to the GWP question
+* Health: Healthy life expectancy at birth from WHO
+* Freedom: Freedom to make life choices, national average of responses to the GWP question
+* Generosity: residual of regressing national average of response to the GWP question
+* Corruption: national average of the survey responses to two questions in the GWP, (either 0 or 1)
+* Positive: (affect) defined as the average of three positive affect measures in GWP: happiness, laugh and enjoyment
+* Negative: (affect)  defined as the average of three negative affect measures in GWP:  they are worry, sadness and anger
+* Government: Confidence in national government
+* Code: Country code
+* Alcohol: Total alcohol consumption per capita (liters of pure alcohol, projected estimates, 15+ years of age)
+* Population: Population (historical estimates)
+* Tobacco: Prevalence of current tobacco use (% of adults)
+* Internet: Individuals using the Internet (% of population)
+
+
 ```{r, echo=FALSE}
-data_over_time <- read.csv(file = './data/preprocessed_data_happy_incl_region_no_nan.csv')
-kable(data_over_time[1:3,3:ncol(data_over_time)], "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
-```
-
-
-For the second dataset, the [influential factors analysis]("./data/preprocessed_data_2018_no_nan.csv"), we inspected the missing values of each year and choose the year with the lowes missing values, year 2018 (fig "missing values 2018"). Then we excluded all rows containing missing values again. Figure "missing values 2017" shows e.g. that the smoking and the alcohol dataset did not contain any values for the year 2017.  We also renamed the columns for having shorter labels.
-
-```{r, echo=FALSE}
-data_2018 <- read.csv(file = './data/preprocessed_data_2018_no_nan.csv')
-data_2018$Region <- as.factor(data_2018$Region)
+data_2018 <- read.csv(file = './data/preprocessed_raw_2018_no_nan.csv')
+colnames(data_2018)[6] <- "Social"
+colnames(data_2018)[11] <- "Positive"
+colnames(data_2018)[12] <- "Negative"
+#data_2018$Region <- as.factor(data_2018$Region)
 kable(data_2018[1:3,1:ncol(data_2018)], "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
-![missing values full data](./figs/full_data_missing_values.png)
+
 
 ![missing values 2017](./figs/2017_missing_values.png)
 
 
 ![missing values 2018](./figs/2018_missing_values.png)
 
-## Preliminary analyses
+## Preliminary analyses on the raw dataset
 
-One of the objectives of preliminary data analysis to get a feel for the data you are dealing with by describing the key features of the data and summarizing the results. We are focusing on the second dataset, the [influential factors analysis dataset]("./data/preprocessed_data_2018_no_nan.csv"), as it contains the most explanatory variables.
+One of the objectives of preliminary data analysis to get a feel for the data you are dealing with by describing the key features of the data and summarizing the results. We are focusing on the second dataset, the [influential factors dataset]("./data/preprocessed_raw_2018_no_nan.csv"), which includes the raw values and not the explained by values.
 
 ### Boxplots, scale data?
 ```{r echo=FALSE}
-correlation_categories <- c("Happiness","Economy","Family","Health","Freedom","Trust","Generosity","Alcohol","Population","Tobacco","Internet", "Region")
+correlation_categories <- c("Happiness","Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet")
 ```
-First we check via the summary how all the explanatory variables are distributed. As we can see they are on different scales, especially "population" and "Internet usage". As we don't want to have the following analysis be more driven on the larges distances, we scale them by $\frac{(x - mean(x))}{sd(x)}$
+First we check via the summary how all the explanatory variables are distributed. As we can see they are on different scales, especially "Health","Population" and "Internet". As we don't want to have data reduction analysis be more driven on the larges distances, we scale them by $\frac{(x - mean(x))}{sd(x)}$
 
 ```{r echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
 summary(data_2018[,correlation_categories])
 ```
-```{r echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
-not_scaled_data_factors <- data.frame(data_2018[,correlation_categories[-12]])
-scaled_data_factors <- data.frame(scale(data_2018[,correlation_categories[-12]]))
+```{r echo=FALSE, fig.height=7, fig.width=9, message=FALSE, warning=FALSE}
+not_scaled_data_factors <- data.frame(data_2018[,correlation_categories])
+scaled_data_factors <- data.frame(scale(data_2018[,correlation_categories]))
 
 data_long <- melt(scaled_data_factors) 
 ggplot(data_long, aes(x = variable, y = value)) +
@@ -111,25 +148,28 @@ ggplot(data_long, aes(x = variable, y = value)) +
 
 ```
 
-We can see that every factor is now on the same scale. We have some outliers for Family, Freedom, Trust, Generosity and Population.
+We can see that every factor is now on the same scale. We have some outliers for Corruption, Generosity and Population.
 
-### correlation matrix
+### Correlation Matrix
 
-On the correlation matrix plot we see, that happiness has the stronges correlation with Economy (0.833) and Internet (0.817).
+On the correlation matrix plot we see, that happiness has the strongest correlation with Economy (0.801), Internet (0.786), Social (0.768) and Health (0.767).
 For the correlations between the explanatory variables the following stand out:
 
-* 0.934: Economy and Internet
+* 0.938: Economy and Internet
+* 0.878: Health and Internet
 * 0.875: Economy and Health
-* 0.864: Internet and Health
-* 0.741: Family and Economy
-* 0.728: Internet and Family
+* 0.807: Economy and Social
+* 0.791: Social and Internet
+* 0.753: Social and Health
+* 0.659: Freedom and Positive
+* -0.646: Social and Negative
 
-```{r echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
+```{r echo=FALSE, fig.height=10, fig.width=11, message=FALSE, warning=FALSE}
 ggpairs(scaled_data_factors, title="correlation matrix for influential factors analysis", )
 ```
 
 
-### regression
+### Regression
 
 One tool for getting a first glance on what influences happiness is linear regression. For the regression we use the unscaled data. If our linear model has good predictability, we can interpret the coefficients on how they influence the outcome. This is also called regression analysis, where the goal is to isolate the relationship between each explanatory variable and the outcome variable.
 
@@ -137,7 +177,7 @@ However, the interpretability assumes that you can only change the value of  one
 
 One way to asses how strong the explanatory variables are affected by multicollinearity is using the variance inflation factor (VIF). VIFs identify correlations and their strength. VIFs between 1 and 5 suggest that there is a small correlation, VIFs greater than 5 represent critical levels of multicollinearity where the coefficients are poorly estimated. 
 
-If we build a linear regression model on all explanatory variables, we get an **R-squared of 0.8303**. However, by plotting the VIF values we can see that a model based on all explanatory variables has severe multicollinearity. Therefore we can not interprete the coefficients for Internet and Economy.
+If we build a linear regression model on all explanatory variables, we get an **R-squared of 0.8063**. However, by plotting the VIF values we can see that a model based on all explanatory variables has severe multicollinearity. Therefore we can not interprete the coefficients for Internet, Health and Economy.
 
 
 ```{r echo=FALSE, message=FALSE}
@@ -150,16 +190,18 @@ abline(v = 5, lwd = 3, lty = 2)
 
 ```
 
-If we build a linear regression model without Internet and Economy, we get an **R-squared of 0.7924**. This R-squared is lower than prior, but after plotting the VIF values we can see that we are allowed to interprete the coefficients for the remaining explanatory variables.
+If we build a linear regression model without Internet and Economy, we get an **R-squared of 0.7745**. This R-squared is lower than prior, but after plotting the VIF values we can see that we are allowed to interpret the coefficients for the remaining explanatory variables, as all VIF values are below 5.
 
-Interesting is that only Family, Health and Tabacco is statistically significant:
+Interesting is that only Social, Health, Corruption, Negative and Government are statistically significant:
 
-* Family has an positive effect on the Happiness Score. One unit change on Family results in an absolute Happiness increase of **15.98**
-* Health has an positive effect on the Happiness Score. One unit change on Health results in an absolute Happiness increase of **24.04**
-* Tobacco has an negative effect on the Happiness Score. One unit change on Tobacco results in an absolute Happiness decrease of **-0.01884**
+* Social has an positive effect on the Happiness Score. One unit change on Social results in an absolute Happiness increase of **4.646**
+* Health has an positive effect on the Happiness Score. One unit change on Health results in an absolute Happiness increase of **0.05214**
+* Corruption has an negative effect on the Happiness Score. One unit change on Corruption results in an absolute Happiness decrease of **-1.616**
+* Negative has an positive effect on the Happiness Score. One unit change on Negative results in an absolute Happiness increase of **1.927**
+* Government has an negative effect on the Happiness Score. One unit change on Government results in an absolute Happiness decrease of **-1.016**
 
 ```{r echo=FALSE, message=FALSE}
-lm2 <- lm(Happiness ~ . -Internet - Economy , data = not_scaled_data_factors)
+lm2 <- lm(Happiness ~ . -Internet -Economy, data = not_scaled_data_factors)
 summary(lm2)
 vif_values2 <- vif(lm2)
 par(mar=c(2,6,2,2))
@@ -167,34 +209,54 @@ barplot(vif_values2, main = "VIF Values Model -Internet & -Economy", horiz = TRU
 abline(v = 5, lwd = 3, lty = 2)
 
 ```
-Next we tried out the linear regrssion methods with shrinkage. For Lasso and Ridge regression all predictor variables should be scaled so that they
-have the same standard deviation. Otherwise, the predictor variables have weighting in the penalty term. The glmnet() function however standardises the predictors by default and the output coefficients are recalculated to apply to the original scale.
 
-The Ridge regression 
+Next we tried out a linear regrssion method with shrinkage. For the lasso regression some estimates can become exactly zero. The result is therfore a type of variable selection and makes the model sparse and easier to interpret. For Lasso regression all predictor variables should be scaled so that they have the same standard deviation. Otherwise, the predictor variables have weighting in the penalty term. The glmnet() function however standardizes the predictors by default and the output coefficients are recalculated to apply to the original scale.
 
-
-
-```{r}
+```{r echo=FALSE, message=FALSE}
+"Lasso Regression"
 x <- model.matrix(Happiness ~ . -Internet - Economy , data = not_scaled_data_factors)[, -1]
 y <- not_scaled_data_factors$Happiness
-
-"Ridge Regression"
-ridge.out <- cv.glmnet(x,y, alpha = 0)
-coef(ridge.out)
-```
-
-The Lasso Regression
-
-
-```{r}
-
-"Lasso Regression"
 lasso.out <- cv.glmnet(x,y, alpha = 1)
 coef(lasso.out)
 ```
+The results of the lasso regression confirm our results from the normal regression for Social, Health and Corruption. However Positive is added and  Negative and Government is removed from the model.
+
+* Social.support: 3.35096335
+* Health: 0.04886770
+* Corruption: -0.68012247
+* Positive.affect: 0.22545789
+
+### PCA biplot
 
 
-### PCA (Colour by region) + biplot (or PLS)
+(Colour by region) 
+```{r figures-side, fig.show="hold", out.width="50%"}
+par(mar = c(4, 4, .1, .1))
+pca <- prcomp(scaled_data_factors)
+pca$rotation[,1:2]
+
+pc1_exp <- round((pca$sdev[1]^2/ sum(pca$sdev^2))*100,2)
+pc2_exp <- round((pca$sdev[2]^2/ sum(pca$sdev^2))*100,2)
+
+happiness_category <- round(not_scaled_data_factors$Happiness) 
+
+region_category <- as.factor(data_2018$Region)
+
+plot(pca$x, xlab= paste("PC1: ", pc1_exp, "%") , ylab= paste("PC2: ", pc2_exp,"%"), pch=16, col =happiness_category)
+legend("topright", legend=unique(happiness_category), pch=16,col = unique(happiness_category) )
+
+plot(pca$x, xlab= paste("PC1: ", pc1_exp, "%") , ylab= paste("PC2: ", pc2_exp,"%"), pch=16, col =region_category)
+legend("topright", legend=unique(region_category), pch=16,col = unique(region_category) )
+```
+```{r echo=FALSE, fig.height=7, fig.width=9, message=FALSE, warning=FALSE}
+transformed_data <- pca$x
+biplot( pca,xlab= paste("PC1: ", pc1_exp, "%"), ylab= paste("PC2: ", pc2_exp, "%"),asp=1, )
+symbols( )
+legend("topright", legend=unique(happiness_category), pch=16,col = unique(happiness_category) )
+
+
+```
+
 
 
 ### SOM
@@ -298,13 +360,13 @@ ggplotly(ggplotchange, tooltip = c("text"))
 ## What further influences happiness?
 
 ```{r}
-box <- ggplot(data_2018, aes(x = Region, y = Happiness, color = Region), ) +
-  geom_boxplot() + 
-  geom_jitter(aes(color=Country), size = 0.5) +
-  ggtitle("Happiness Score for Regions and Countries") + 
-  coord_flip() + 
-  theme(legend.position="none")
-ggplotly(box)
+#box <- ggplot(data_2018, aes(x = Region, y = Happiness, color = Region), ) +
+#  geom_boxplot() + 
+#  geom_jitter(aes(color=Country), size = 0.5) +
+#  ggtitle("Happiness Score for Regions and Countries") + 
+#  coord_flip() + 
+#  theme(legend.position="none")
+#ggplotly(box)
 ```
 
 # Tobacco Consumption
