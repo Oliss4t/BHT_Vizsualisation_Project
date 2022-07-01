@@ -1,0 +1,259 @@
+---
+title: Vizualization on the Happines Dataset including Tabacco, Alcohole and Internet
+  consumption, detailed explanation of specific vizualisations
+author: "Tassilo Henninger"
+date: "01 7 2022"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(kableExtra)
+require(gridExtra)
+library(plotly)
+library(scales)
+library(GGally)
+library(reshape2)
+library(car)
+library(rgl)
+library(ggplot2)
+require("glmnet")
+library("corrplot")
+
+```
+
+## What influences Happiness?
+Can happiness be explained by certain factors?
+What are those factors and how much do they influence the happiness?
+For this questions we need the raw values to build our analysis on top.
+To answer this questions we decided to add additional factors which might explain the different happiness levels.
+We were interested in how drug abuse correlates with happiness and found suiting datasets for alcohol consumption and tabaco consumtion.
+Additionally we were intereseted in how the modern user of social media influeces happiness. However we only found a fitting internet dataset which captures the percentage of the individuals in a country which is using the Internet.
+
+
+## PCA and Biplot
+
+Die Hauptkomponentenanalyse geht von der Annahme aus, dass es bei stark korrelierten Größen eine dritte Größe gibt, die nicht direkt messbar ist und die hinter diesen korrelierten Variablen steht und sich quasi in ihnen äußert. Das bedeutet, die messbaren Größen sind nur eine andere Erscheinungsform von Größen, die im Hintergrund stehen und nicht direkt gemessen werden können. Man nennt diese im Hintergrund stehenden Größen Hauptkomponenten (Principal Components), Latent Variables oder Faktoren. Ziel der Hauptkomponentenanalyse ist es, solche Hintergrundgrößen bzw. Faktoren aus den gemessenen Daten zu ermitteln und die beobachteten Zusammenhänge möglichst vollständig zu erklären. Mit Hilfe der Hauptkomponentenanalyse lassen sich demzufolge komplexe Informationen auf nur wenige, orthogonale Informationen verdichten.
+
+Die Hauptkomponentenanalyse bestimmt die Faktoren nach rein mathematischen Gesichtspunkten. Da der erste Faktor immer in die Richtung der maximalen Varianz in den Daten zeigt, werden dadurch die real gemessen Informationen am besten repräsentiert.
+
+
+sing a sample of six hundred participants, linear regression model was fitted and collinearity between predictors was detected using Variance Inflation Factor (VIF). After confirming the existence of high relationship between independent variables, the principal components was utilized to find the possible linear combination of variables that can produce large variance without much loss of information. Thus, the set of correlated variables were reduced into new minimum number of variables which are independent on each other but contained linear combination of the related variables. In order to check the presence of relationship between predictors, dependent variables were regressed on these five principal components. The results show that VIF values for each predictor ranged from 1 to 3 which indicates that multicollinearity problem was eliminated.
+
+For the PCA we are using the scaled factors without the happiness score. The first two PCs explain 59.01 % of the variation together.
+
+PC1 explains 39.07 % of the variation and the coefficients are the following:
+
+ $$PC1=-0.415*Economy+-0.397*Social+-0.395*Health+-0.174*Freedom+0.192*Corruption \\
+ +0.115*Generosity+-0.182*Positive+0.317*Negative+0.132*Government+-0.289*Alcohol \\
+ +0.069*Population+-0.164*Tobacco+-0.411*Internet$$
+
+The first PCA plot colored by the rounded happiness scores, clusters the countries quite good.
+For low values on PC1 and PC2 we the really high happiness scores. The top 3 countries for 2018 (Finland, Denmark and Switzerland) are all in that region.
+Also interestting is that most of the countries in the lower left are from 'Western Europe', expecpt of 'New Zealand', 'Australia' and 'Canada' with are from 'North America and ANZ'.
+When we move from left to right, the happiness scores decrease. The values 8,7,6,5,4 are quite good seperated. An exeption is the happiness category of 3. They are spread out on the right half side of the plot.   
+
+
+
+
+An interesting outlier ist Benin (BEN) on the middle right. Benin belongs to the happiness category 6 but is on the verry right side.
+Another outlier ist Botswana (BWA) which belongs to the happiness category 3 but is in the verry middle.
+
+
+
+With the coefficients and the 
+
+coefficients 
+
+
+
+ 
+PC2 explains 19.94% of the variation and the coefficients are the following:
+ 
+  $$PC2=0.059*Economy+0.014*Social+0.054*Health+-0.478*Freedom+0.388*Corruption \\
+  +-0.396*Generosity+-0.384*Positive+0.108*Negative+-0.467*Government+0.054*Alcohol \\
+  +-0.078*Population+0.246*Tobacco+0.103*Internet$$
+```{r}
+
+ggdat <-  data.frame(X=pca$x[,1],Y=pca$x[,2])
+#ggdat$indiv_id <- as.factor(ggdat$indiv_id)
+ggdat$group_id <- as.factor(round(not_scaled_data_factors$Happiness))
+
+
+
+ggplot(ggdat) +
+  geom_point(aes(x=X, y=Y,color=group_id),size=1) + # 
+  stat_ellipse(aes(x=X, y=Y,,color=group_id, group=group_id),type = "norm") +
+  theme(legend.position='none')
+```
+
+
+
+  
+ 
+```{r}
+library("FactoMineR")
+library("factoextra")
+res.pca <- PCA(scaled_data_factors[,correlation_categories_without_happy], graph = FALSE)
+fviz_pca_var(res.pca, col.var = "contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07")
+             )
+#corrplot(var$cos2, is.corr=FALSE)
+fviz_pca_ind(res.pca,
+             geom.ind = "point", # show points only (nbut not "text")
+             col.ind = as.factor(happiness_category), # color by groups
+             palette = c("#00AFBB", "#E7B800", "#FC4E07","#00AFBB", "#E7B800", "#FC4E07"),
+             addEllipses = TRUE, # Concentration ellipses
+             legend.title = "Groups"
+             )
+
+```
+```{r}
+library(ggbiplot)
+
+#rownames(wine.pca$rotation) <- rep("my_names", length(wine.pca$center))
+print(ggbiplot(pca, obs.scale = 1, var.scale = 1, groups = happiness_category, ellipse = TRUE, circle = TRUE))
+```
+
+ 
+ 
+```{r fig.height=8, fig.width=10, echo=FALSE, message=FALSE}
+#figures-side, fig.show="hold", out.width="50%"
+correlation_categories_without_happy <- c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet")
+
+par(mar = c(4, 4, .1, .1))
+pca <- prcomp(scaled_data_factors[,correlation_categories_without_happy])
+pca$rotation[,1:2]
+
+pc1_exp <- round((pca$sdev[1]^2/ sum(pca$sdev^2))*100,2)
+pc2_exp <- round((pca$sdev[2]^2/ sum(pca$sdev^2))*100,2)
+
+happiness_category <- round(not_scaled_data_factors$Happiness)
+
+region_category <- as.factor(data_2018$Region)
+
+coolwarm_hcl <- colorspace::diverging_hcl(100,h = c(250, 10), c = 100, l = c(37, 88), power = c(0.7, 1.7))
+plot(pca$x, xlab= paste("PC1: ", pc1_exp, "%") , ylab= paste("PC2: ", pc2_exp,"%"),    pch=16,col =happiness_category) #type="n", 
+text(pca$x[,1],pca$x[,2]-0.1, labels =data_2018$Code, cex=0.6)
+legend("topright", legend=sort(unique(happiness_category), decreasing = TRUE), pch=16,col = sort(unique(happiness_category), decreasing = TRUE))
+
+
+plot(pca$x, xlab= paste("PC1: ", pc1_exp, "%") , ylab= paste("PC2: ", pc2_exp,"%"), pch=16, col =region_category)
+text(pca$x[,1],pca$x[,2]-0.1, labels =data_2018$Code, cex=0.6)
+legend("topright", legend=unique(region_category), pch=16,col = unique(region_category) )
+```
+```{r echo=FALSE, fig.height=7, fig.width=9, message=FALSE, warning=FALSE}
+transformed_data <- pca$x
+biplot( pca,xlab= paste("PC1: ", pc1_exp, "%"), ylab= paste("PC2: ", pc2_exp, "%"),asp=1, )
+#symbols( )
+legend("topright", legend=unique(happiness_category), pch=16,col = unique(happiness_category) )
+
+
+```
+```{r}
+#figures-side, fig.show="hold", out.width="50%"
+correlation_categories_without_happy <- c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet")
+
+par(mar = c(4, 4, .1, .1))
+pca <- prcomp(scaled_data_factors[,correlation_categories_without_happy])
+pca$rotation[,1:2]
+
+pc1_exp <- round((pca$sdev[1]^2/ sum(pca$sdev^2))*100,2)
+pc2_exp <- round((pca$sdev[2]^2/ sum(pca$sdev^2))*100,2)
+
+happiness_category <- round(not_scaled_data_factors$Happiness)
+
+region_category <- as.factor(data_2018$Region)
+
+p2 <- ggplot(newdata, aes(Health, Happiness, colour = Region)) +
+  geom_point(alpha = 0.9, show.legend = FALSE, size = 2) +
+  scale_colour_manual(values = rainbow(10))
+
+
+pal <- function(n) viridis(n)
+plot(happy_SOM_model, shape="straight", palette.name=pal(10))
+
+
+pca_plot_data <- data.frame(pca$x[,1:2])
+pca_plot_data$happiness <- as.factor(happiness_category)
+pca_plot_data$code <- data_2018$Code
+
+plot(pca$x, xlab= paste("PC1: ", pc1_exp, "%") , ylab= paste("PC2: ", pc2_exp,"%"),    pch=16,col =happiness_category, ) #type="n", 
+text(pca$x[,1],pca$x[,2]-0.1, labels =data_2018$Code, cex=0.6)
+legend("topright", legend=sort(unique(happiness_category), decreasing = TRUE), pch=16,col = sort(unique(happiness_category), decreasing = TRUE))
+
+
+require(ggalt)
+
+ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=code ))+
+  scale_color_viridis(discrete=TRUE) +
+  geom_point(size=14,shape=16) +
+  geom_text(hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
+  stat_ellipse(aes(x=PC1, y=PC2, color=happiness, group=happiness),type = "norm",size=2) +
+  xlab(paste("PC1: ", pc1_exp, "%")) +
+  ylab(paste("PC2: ", pc2_exp, "%"))
+
+
+
+
+ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=code ))+
+  scale_color_viridis(discrete=TRUE) +
+  geom_point(size=14,shape=16) +
+  geom_text(hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
+  #stat_ellipse(aes(x=PC1, y=PC2, color=happiness, group=happiness),type = "norm",size=2) +
+  geom_encircle(aes(group=happiness), color="black")+ 
+  xlab(paste("PC1: ", pc1_exp, "%")) +
+  ylab(paste("PC2: ", pc2_exp, "%"))
+
+
+
+scale_color_viridis()
+
+
+ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=code ))+
+  scale_color_viridis(end = 0.95, discrete=TRUE) +
+  geom_point(size=14,shape=16) +
+  geom_text(hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
+  ggforce::geom_mark_ellipse(inherit.aes = FALSE ,aes(x=PC1, y=PC2, group = happiness, color = happiness,  label = happiness)
+                             , tol = 0.001, alpha=0.1) +
+  xlab(paste("PC1: ", pc1_exp, "%")) +
+  ylab(paste("PC2: ", pc2_exp, "%")) +
+
+  guides(colour=guide_legend(title="Happiness- \n score")) +
+  theme_minimal() +
+  geom_hline(yintercept=0, linetype="dashed", color = "black", size = 0.8)+
+  geom_vline(xintercept=0, linetype="dashed", color= "black", size = 0.8)+
+  ggtitle("PCA colored by happiness") +
+  theme(axis.title.y = element_text(size = 18, family = "sans"),
+        legend.position = "right",
+    
+        legend.title = element_text(size = 12, family = "sans"),
+        axis.text.x = element_text(colour ="black", size = 16, family = "sans"),
+        axis.text.y = element_text(colour ="black", size = 16, family = "sans"),
+        axis.title.x = element_text(colour = "black", size = 18, family = "sans"),
+        #legend.title = element_blank(),
+        panel.background = element_blank(),
+       # axis.line = element_blank(),
+        plot.title = element_text(size = 20, family = "sans", margin=margin(b = 20, unit = "pt")),
+        plot.margin = margin(0.5,0.5,0.5,0.5, "cm"),
+        #legend.text.align = 0,
+       # legend.key = element_rect(fill = "white", colour = "white"),
+        
+       # legend.key.size = unit(1, 'cm'), #change legend key size
+        #     legend.key.height = unit(1, 'cm'), #change legend key height
+         #    legend.key.width = unit(1, 'cm')
+        
+        )
+  
+
+
+    
+
+
+
+```
+
+
