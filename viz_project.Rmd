@@ -180,7 +180,9 @@ For the correlations between the explanatory variables the following stand out:
 * -0.646: Social and Negative
 
 ```{r echo=FALSE, fig.height=10, fig.width=11, message=FALSE, warning=FALSE}
-ggpairs(scaled_data_factors, title="Correlation Matrix For Influential Factors Analysis", )
+plot_cor_matrix <- ggpairs(scaled_data_factors, title="Correlation Matrix For Influential Factors Analysis", )
+plot_cor_matrix
+ggsave(file="./correlation_matrix.svg", plot=plot_cor_matrix, width=11, height=10)
 ```
 
 ## What influences happiness?
@@ -279,7 +281,7 @@ lasso_melt = melt(lasso_coef, variable_name="type")
 reg_lasso <- rbind(reg_melt[,c("factor","significance_level","type","value")],lasso_melt[,c("factor","significance_level","type","value")])
 
 
-ggplot(reg_lasso, aes(factor, value, fill=significance_level, linetype=type, col="green")) + 
+plot_significant_factors <- ggplot(reg_lasso, aes(factor, value, fill=significance_level, linetype=type, col="green")) + 
   geom_bar(stat='identity',position="dodge", size=1.1  ) +
   scale_fill_grey() +
   guides(linetype = guide_legend(override.aes = list(fill = NA, col = "black")))+
@@ -292,6 +294,8 @@ ggplot(reg_lasso, aes(factor, value, fill=significance_level, linetype=type, col
   theme(      panel.background = element_blank(),
       plot.title = element_text(size = 18, family = "sans", margin=margin(b = 20, unit = "pt")),
       )
+plot_significant_factors
+ggsave(file="./significant_factors.svg", plot=plot_significant_factors, width=10, height=8)
 
 ```
 
