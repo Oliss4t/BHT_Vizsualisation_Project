@@ -449,16 +449,22 @@ text( som2pts(happy_SOM_model)[,1]+ runif(95)*0.5-0.25, som2pts(happy_SOM_model)
 ![SOM](./figs/SOM_svg.svg)
 ### What further influences happiness?
 
+Besides all the numeric factors, looking at the visualization below, there is a clear difference between the happieness distributions for Regions.
+The happiest
+
 ```{r echo=FALSE, fig.height=7, fig.width=9, message=FALSE, warning=FALSE}
 col_palette <- viridis(11)[-1]
-box <- ggplot(data_2018, aes(x = Region, y = Happiness, color = Happiness), ) +
+box <- ggplot(data_2018, aes(x = Region, y = Happiness, color = Happiness)) +
   geom_boxplot() + 
   scale_color_viridis(end = 0.95) +
-  geom_jitter( size = 1) +
+  geom_jitter( size = 1, aes( text  = paste("Region:", Region, "<br>", "Country:", Country, "<br>", "Happiness:", Happiness))) +
    theme_minimal() +
   ggtitle("Happiness Score for Regions and Countries") + 
   coord_flip() 
-ggplotly(box)
+ggplotly(box, tooltip = "text")
+
+
+
 
 ```
 
