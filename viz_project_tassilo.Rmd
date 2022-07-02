@@ -153,6 +153,41 @@ legend("topright", legend=unique(happiness_category), pch=16,col = unique(happin
 
 
 ```
+```{r echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
+pca_corr <- cor(scaled_data_factors[,correlation_categories_without_happy],pca$x)
+
+
+pca1_merged <- cbind(pca$rotation[,1],pca_corr[,1])
+pca2_merged <- cbind(pca$rotation[,2],pca_corr[,2])
+
+
+pca1_2_coef <- data.frame(PC1=pca1_merged[,1], PC2=pca2_merged[,1], 
+          factor=c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet"))
+
+pca1_2_corr <- data.frame(PC1=pca1_merged[,2], PC2=pca2_merged[,2], 
+          factor=c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet"))
+
+pc_coef = melt(pca1_2_coef, variable_name="variable")
+colnames(pc_coef) <- c("factor", "PC","coefficient")
+pc_corr = melt(pca1_2_corr, variable_name="variable")
+pc_coef_corr <- cbind(pc_coef,pc_corr[,3])
+colnames(pc_coef_corr) <- c("factor", "PC","coefficient","correlation")
+
+
+ggplot(pc_coef_corr) + 
+       geom_bar(aes(factor, correlation, fill=PC),stat="identity",position="dodge",alpha=.2) +
+       geom_bar(aes(factor, coefficient, fill=PC),stat='identity',position="dodge")
+       
+       
+pc_coef_corr
+      # geom_bar(aes(x = as.integer(School) + .2, y= Percent - .5),stat = "identity", alpha=.2,width = 0.6)
+
+
+
+```
+
+
+
 ```{r}
 #figures-side, fig.show="hold", out.width="50%"
 correlation_categories_without_happy <- c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet")

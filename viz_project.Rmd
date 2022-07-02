@@ -9,6 +9,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+options(width =200)
 knitr::opts_chunk$set(echo = TRUE)
 library(knitr)
 library(kableExtra)
@@ -23,7 +24,12 @@ library(ggplot2)
 require("glmnet")
 library("corrplot")
 library(viridis)
+library("ggbiplot")
+library(ggforce)
+library(kohonen)
 
+cred <- "#b30000"
+cgreen <- "#097969"
 
 ```
 
@@ -42,6 +48,7 @@ That is why we looked for an additional version of the happiness dataset, which 
 ## Report questions based on the Happiness Datasets
 
 Based on the happiness dataset we want to try to answer the follwing leading questions.
+
 ### What influences Happiness?
 Can happiness be explained by certain factors?
 What are those factors and how much do they influence the happiness?
@@ -49,11 +56,13 @@ For this questions we need the raw values to build our analysis on top.
 To answer this questions we decided to add additional factors which might explain the different happiness levels.
 We were interested in how drug abuse correlates with happiness and found suiting datasets for alcohol consumption and tabaco consumtion.
 Additionally we were intereseted in how the modern user of social media influeces happiness. However we only found a fitting internet dataset which captures the percentage of the individuals in a country which is using the Internet.
+
 ### Happiness over time?
 For the change of happiness we can use the plain happiness dataset as it captures the happiness scores  and the explained by parts for the 6 factors over time. Therefore we can calculate an visualize the changes over time.
 
 ## Datasets and Pre-Processing
 For answering our two main questions we decided for the given reasons to create two datasets.
+
 ### Over Time Dataset
 For the answering the happiness change over time we used the data from the [World Happiness Report](https://www.kaggle.com/datasets/mathurinache/world-happiness-report) which is ranging from 2015 to 2022. An example of 2015 can be seen in the table below. 
 ```{r, echo=FALSE}
@@ -146,7 +155,11 @@ scaled_data_factors <- data.frame(scale(data_2018[,correlation_categories]))
 
 data_long <- melt(scaled_data_factors) 
 ggplot(data_long, aes(x = variable, y = value)) +
-  geom_boxplot()
+  geom_boxplot(outlier.colour = cred)+ 
+  theme_minimal() +
+  theme(      panel.background = element_blank(),
+      plot.title = element_text(size = 18, family = "sans", margin=margin(b = 20, unit = "pt")),
+      )
 
 ```
 
@@ -167,7 +180,7 @@ For the correlations between the explanatory variables the following stand out:
 * -0.646: Social and Negative
 
 ```{r echo=FALSE, fig.height=10, fig.width=11, message=FALSE, warning=FALSE}
-ggpairs(scaled_data_factors, title="correlation matrix for influential factors analysis", )
+ggpairs(scaled_data_factors, title="Correlation Matrix For Influential Factors Analysis", )
 ```
 
 ## What influences happiness?
@@ -186,11 +199,13 @@ If we build a linear regression model on all explanatory variables, we get an **
 
 
 ```{r echo=FALSE, message=FALSE}
+
 lm1 <- lm(Happiness ~ . , data = not_scaled_data_factors)
 summary(lm1)
 vif_values <- vif(lm1)
 par(mar=c(2,6,2,2))
-barplot(vif_values, main = "VIF Values Full Model", horiz = TRUE, col = "blue", las=1)
+barplot(vif_values, main = "VIF Values Full Model", horiz = TRUE, col = c(cred,cgreen,cred,cgreen,cgreen,cgreen,cgreen,cgreen,cgreen,cgreen,cgreen,cgreen,cred)
+        , las=1)
 abline(v = 5, lwd = 3, lty = 2)
 
 ```
@@ -210,7 +225,7 @@ lm2 <- lm(Happiness ~ . -Internet -Economy, data = not_scaled_data_factors)
 summary(lm2)
 vif_values2 <- vif(lm2)
 par(mar=c(2,6,2,2))
-barplot(vif_values2, main = "VIF Values Model -Internet & -Economy", horiz = TRUE, col = "blue", las=1)
+barplot(vif_values2, main = "VIF Values Model -Internet & -Economy", horiz = TRUE, col = cgreen, las=1)
 abline(v = 5, lwd = 3, lty = 2)
 
 ```
@@ -226,6 +241,15 @@ y <- not_scaled_data_factors$Happiness
 lasso.out <- cv.glmnet(x,y, alpha = 1)
 coef(lasso.out)
 ```
+
+The results of the lasso regression confirm our results from the normal regression for Social, Health and Corruption. However Positive is added and  Negative and Government is removed from the model.
+
+* Social.support: 3.35096335
+* Health: 0.04886770
+* Corruption: -0.68012247
+* Positive.affect: 0.22545789
+
+The change in the significant factors between the linear regression and lasso regression can be seen below:
 
 ```{r echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
 reg_coef = data.frame(lm2$coefficients, pvalue=summary(lm2)$coefficients[,4])
@@ -260,18 +284,16 @@ ggplot(reg_lasso, aes(factor, value, fill=significance_level, linetype=type, col
   scale_fill_grey() +
   guides(linetype = guide_legend(override.aes = list(fill = NA, col = "black")))+
   guides(colour =  "none") +
+  ggtitle("Significant Factors: Lasso vs. Linear Regression") +
   scale_color_manual(values=c("#000000", "#000000")) +
-  scale_fill_manual(values=c("#FFFFFF", "#097969")) +
-  ylab("coefficient") 
+  scale_fill_manual(values=c("#FFFFFF", cgreen)) +
+  ylab("coefficient") +
+  theme_minimal() +
+  theme(      panel.background = element_blank(),
+      plot.title = element_text(size = 18, family = "sans", margin=margin(b = 20, unit = "pt")),
+      )
 
 ```
-
-The results of the lasso regression confirm our results from the normal regression for Social, Health and Corruption. However Positive is added and  Negative and Government is removed from the model.
-
-* Social.support: 3.35096335
-* Health: 0.04886770
-* Corruption: -0.68012247
-* Positive.affect: 0.22545789
 
 ### PCA and Biplot
 
@@ -317,176 +339,127 @@ PC2 explains 19.94% of the variation and the coefficients are the following:
   +-0.078*Population+0.246*Tobacco+0.103*Internet$$
 
 
+```{r echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE}
 
+correlation_categories_without_happy <- c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol",
+                                          "Population","Tobacco","Internet")
 
-  
- 
-
- 
- 
-```{r fig.height=8, fig.width=10, echo=FALSE, message=FALSE}
-#figures-side, fig.show="hold", out.width="50%"
-correlation_categories_without_happy <- c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet")
-
-par(mar = c(4, 4, .1, .1))
 pca <- prcomp(scaled_data_factors[,correlation_categories_without_happy])
-pca$rotation[,1:2]
 
 pc1_exp <- round((pca$sdev[1]^2/ sum(pca$sdev^2))*100,2)
 pc2_exp <- round((pca$sdev[2]^2/ sum(pca$sdev^2))*100,2)
 
 happiness_category <- round(not_scaled_data_factors$Happiness)
-
 region_category <- as.factor(data_2018$Region)
 
-#p2 <- ggplot(newdata, aes(Health, Happiness, colour = Region)) +
-#  geom_point(alpha = 0.9, show.legend = FALSE, size = 2) +
-#  scale_colour_manual(values = rainbow(10))
+pca_plot_data <- data.frame(pca$x[,1:2])
+pca_plot_data$happiness <- as.factor(happiness_category)
+pca_plot_data$code <- data_2018$Code
+pca_plot <- ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=code ))+
+  scale_color_viridis(end = 0.95, discrete=TRUE) +
+  geom_point(size=14,shape=16) +
+  geom_text(hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
+  ggforce::geom_mark_ellipse(inherit.aes = FALSE ,aes(x=PC1, y=PC2, group = happiness, color = happiness,  label = happiness)
+                             , tol = 0.001, alpha=0.1) +
+  xlab(paste("PC1: ", pc1_exp, "%")) +
+  ylab(paste("PC2: ", pc2_exp, "%")) +
 
-
-#pal <- function(n) viridis(n)
-#plot(happy_SOM_model, shape="straight", palette.name=pal(10))
-
-
-plot(pca$x, xlab= paste("PC1: ", pc1_exp, "%") , ylab= paste("PC2: ", pc2_exp,"%"),    pch=16,col =happiness_category, ) #type="n", 
-text(pca$x[,1],pca$x[,2]-0.1, labels =data_2018$Code, cex=0.6)
-legend("topright", legend=sort(unique(happiness_category), decreasing = TRUE), pch=16,col = sort(unique(happiness_category), decreasing = TRUE))
-
-
-plot(pca$x, xlab= paste("PC1: ", pc1_exp, "%") , ylab= paste("PC2: ", pc2_exp,"%"), pch=16, col =region_category)
-text(pca$x[,1],pca$x[,2]-0.1, labels =data_2018$Code, cex=0.6)
-legend("topright", legend=unique(region_category), pch=16,col = unique(region_category) )
-```
-```{r echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
-pca_corr <- cor(scaled_data_factors[,correlation_categories_without_happy],pca$x)
-
-
-pca1_merged <- cbind(pca$rotation[,1],pca_corr[,1])
-pca2_merged <- cbind(pca$rotation[,2],pca_corr[,2])
-
-
-pca1_2_coef <- data.frame(PC1=pca1_merged[,1], PC2=pca2_merged[,1], 
-          factor=c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet"))
-
-pca1_2_corr <- data.frame(PC1=pca1_merged[,2], PC2=pca2_merged[,2], 
-          factor=c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet"))
-
-pc_coef = melt(pca1_2_coef, variable_name="variable")
-colnames(pc_coef) <- c("factor", "PC","coefficient")
-pc_corr = melt(pca1_2_corr, variable_name="variable")
-pc_coef_corr <- cbind(pc_coef,pc_corr[,3])
-colnames(pc_coef_corr) <- c("factor", "PC","coefficient","correlation")
-
-
-ggplot(pc_coef_corr) + 
-       geom_bar(aes(factor, correlation, fill=PC),stat="identity",position="dodge",alpha=.2) +
-       geom_bar(aes(factor, coefficient, fill=PC),stat='identity',position="dodge")
-       
-       
-pc_coef_corr
-      # geom_bar(aes(x = as.integer(School) + .2, y= Percent - .5),stat = "identity", alpha=.2,width = 0.6)
-
-
-
+  guides(colour=guide_legend(title="Happiness- \n score")) +
+  theme_minimal() +
+  geom_hline(yintercept=0, linetype="dashed", color = "black", size = 0.8)+
+  geom_vline(xintercept=0, linetype="dashed", color= "black", size = 0.8)+
+  ggtitle("PCA Colored By Happiness") +
+  theme(axis.title.y = element_text(size = 18, family = "sans"),
+        legend.position = "right",
+        legend.title = element_text(size = 12, family = "sans"),
+        axis.text.x = element_text(colour ="black", size = 16, family = "sans"),
+        axis.text.y = element_text(colour ="black", size = 16, family = "sans"),
+        axis.title.x = element_text(colour = "black", size = 18, family = "sans"),
+        panel.background = element_blank(),
+        plot.title = element_text(size = 32, family = "sans", margin=margin(b = 20, unit = "pt")),
+        plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
+        )
+pca_plot
 ```
 
 
+```{r echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE}
 
-```{r echo=FALSE, fig.height=7, fig.width=9, message=FALSE, warning=FALSE}
-transformed_data <- pca$x
-biplot( pca,xlab= paste("PC1: ", pc1_exp, "%"), ylab= paste("PC2: ", pc2_exp, "%"),asp=1, )
-#symbols( )
-legend("topright", legend=unique(happiness_category), pch=16,col = unique(happiness_category) )
-
-
-```
-
-```{r}
-
-ggdat <-  data.frame(X=pca$x[,1],Y=pca$x[,2])
-#ggdat$indiv_id <- as.factor(ggdat$indiv_id)
-ggdat$group_id <- as.factor(round(not_scaled_data_factors$Happiness))
-
-
-
-ggplot(ggdat) +
-  geom_point(aes(x=X, y=Y,color=group_id),size=1) + # 
-  stat_ellipse(aes(x=X, y=Y,,color=group_id, group=group_id),type = "norm") +
-  theme(legend.position='none')
-```
-
-```{r}
-library("FactoMineR")
-library("factoextra")
-res.pca <- PCA(scaled_data_factors[,correlation_categories_without_happy], graph = FALSE)
-fviz_pca_var(res.pca, col.var = "contrib",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07")
-             )
-#corrplot(var$cos2, is.corr=FALSE)
-fviz_pca_ind(res.pca,
-             geom.ind = "point", # show points only (nbut not "text")
-             col.ind = as.factor(happiness_category), # color by groups
-             palette = c("#00AFBB", "#E7B800", "#FC4E07","#00AFBB", "#E7B800", "#FC4E07"),
-             addEllipses = TRUE, # Concentration ellipses
-             legend.title = "Groups"
-             )
+biplot <-ggbiplot(pca, obs.scale=1, var.scale=1, groups=as.factor(happiness_category),  circle=TRUE) +
+  scale_color_viridis(end = 0.95, discrete=TRUE) +
+  geom_point(aes(colour=as.factor(happiness_category)), size = 12, shape=16) + #plotting over to increase the point size
+  geom_text(aes(label=pca_plot_data$code),hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
+  guides(colour=guide_legend(title="Happiness- \n score")) +
+  theme_minimal() +
+  geom_hline(yintercept=0, linetype="dashed", color = "black", size = 0.8)+
+  geom_vline(xintercept=0, linetype="dashed", color= "black", size = 0.8)+
+  ggtitle("Biplot Colored By Happiness") +
+  theme(axis.title.y = element_text(size = 18, family = "sans"),
+        legend.position = "right",
+        legend.title = element_text(size = 12, family = "sans"),
+        axis.text.x = element_text(colour ="black", size = 16, family = "sans"),
+        axis.text.y = element_text(colour ="black", size = 16, family = "sans"),
+        axis.title.x = element_text(colour = "black", size = 18, family = "sans"),
+        panel.background = element_blank(),
+        plot.title = element_text(size = 32, family = "sans", margin=margin(b = 20, unit = "pt")),
+        plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
+  )
+biplot
 
 ```
-
-### PLS
-
-Die Methode der PLS berechnet eine Regression von vielen unabhängigen x-Variablen auf eine oder mehrere y-Variablen. Der Unterschied zur Multilinearen Regression ist der, dass die x-Variablen hoch korreliert und interkorreliert sein dürfen. Auch können es viel mehr x-Variable als Objekte geben und trotzdem kann die Regression berechnet werden.
-
-Auch bei der PLS Regression werden die x-Variablen in die Matrizen S und F zerlegt, wie bei der PCA. Allerdings wird bei dieser Zerlegung in die Hauptkomponenten für x die Zielgröße y schon mit einbezogen.
-```{r}
-library(pls)
-
-
-#fit PLSR model
-modelpls <- plsr(Happiness  ~., ncomp = 11, data = scaled_data_factors, validation="CV")
-
-
-
-# RMSEP score for the first model
-plot(RMSEP(modelpls), legendpos = "topright")
-
-#make the analysis reproducible
-set.seed(200)
-
-#fit PLSR model
-model <- plsr(Happiness  ~., ncomp = 2, data = scaled_data_factors, validation="CV")
-
-# Bi-plot of scores
-biplot(model, comps = 1:2, which = "scores", cex = 0.6, main = "")
-
-
-# biplot of the scores
-biplot(model, comps = 1:2, asp=1 ,cex = 0.6, main = "", col = c(happiness_category,"black"))# which = "y"
-
-# check the summary
-summary(model)
-
-```
-
-
 
 
 
 ### SOM
 
-![SOM Fanplot (2015)](./figs/fanplot.png)
+```{r eval=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE, include=FALSE}
+som_2018 <- not_scaled_data_factors[,correlation_categories_without_happy]
+som_mat <- as.matrix(som_2018)
 
-![Mappings for SOM](./figs/mapping.png)
+col_palette <- viridis(7)[-1]
+
+som2pts <- function(x){
+  stopifnot("kohonen" %in% class(x))
+  x$grid$pts[x$unit.classif,]
+}
+
+happy_grid <- somgrid(xdim = 6, ydim = 6, topo = "hexagonal")
+happy_SOM_model <- som(X = som_mat, grid=happy_grid)
+
+legend_categories= c(unique(sort(happiness_category)))
+
+pal <- function(n) viridis(n)
+
+mm <- cbind(c(1,1,1),c(2,3,4))
+widths <- c(3,2); heights <- rep(1,1,1)
+layout(mm, widths=widths, heights=heights)
+
+plot(happy_SOM_model, shape="straight", palette.name=pal,)
+plot(happy_SOM_model, type = "dist.neighbours", shape="straight")
+plot(happy_SOM_model, type="mapping", pch=20, col = col_palette[as.integer(happiness_category)-2],shape = "straight",lw=5)
+legend("right", inset= .03, title="Happiness-scores", legend=legend_categories, fill=col_palette, horiz=FALSE, cex=1, bty="n")
+plot(happy_SOM_model, type="mapping", cex=0, col = col_palette[as.integer(happiness_category)-2],shape = "straight")
+text( som2pts(happy_SOM_model)[,1]+ runif(95)*0.5-0.25, som2pts(happy_SOM_model)[,2]+ runif(95)*0.5-0.25 ,labels=pca_plot_data$code, cex=0.6)
+
+
+```
+
+
+
+![SOM](./figs/SOM_svg.svg)
 ### What further influences happiness?
 
-```{r}
-#box <- ggplot(data_2018, aes(x = Region, y = Happiness, color = Region), ) +
-#  geom_boxplot() + 
-#  geom_jitter(aes(color=Country), size = 0.5) +
-#  ggtitle("Happiness Score for Regions and Countries") + 
-#  coord_flip() + 
-#  theme(legend.position="none")
-#ggplotly(box)
+```{r echo=FALSE, fig.height=7, fig.width=9, message=FALSE, warning=FALSE}
+col_palette <- viridis(11)[-1]
+box <- ggplot(data_2018, aes(x = Region, y = Happiness, color = Happiness), ) +
+  geom_boxplot() + 
+  scale_color_viridis(end = 0.95) +
+  geom_jitter( size = 1) +
+   theme_minimal() +
+  ggtitle("Happiness Score for Regions and Countries") + 
+  coord_flip() 
+ggplotly(box)
+
 ```
 
 ### Tobacco Consumption
