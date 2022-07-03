@@ -360,8 +360,6 @@ pca_plot <- ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=co
                              , tol = 0.001, alpha=0.1) +
   xlab(paste("PC1: ", pc1_exp, "%")) +
   ylab(paste("PC2: ", pc2_exp, "%")) +
-
-  guides(colour=guide_legend(title="Happiness- \n score")) +
   theme_minimal() +
   geom_hline(yintercept=0, linetype="dashed", color = "black", size = 0.8)+
   geom_vline(xintercept=0, linetype="dashed", color= "black", size = 0.8)+
@@ -375,7 +373,8 @@ pca_plot <- ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=co
         panel.background = element_blank(),
         plot.title = element_text(size = 32, family = "sans", margin=margin(b = 20, unit = "pt")),
         plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
-        )
+        ) +
+    guides(colour = guide_legend(reverse=T, title="Happiness- \n score"))
 pca_plot
 ```
 
@@ -417,7 +416,6 @@ biplot <-ggbiplot(pca, obs.scale=1, var.scale=1, groups=as.factor(happiness_cate
   scale_color_viridis(end = 0.95, discrete=TRUE) +
   geom_point(aes(colour=as.factor(happiness_category)), size = 12, shape=16) + #plotting over to increase the point size
   geom_text(aes(label=pca_plot_data$code),hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
-  guides(colour=guide_legend(title="Happiness- \n score")) +
   theme_minimal() +
   geom_hline(yintercept=0, linetype="dashed", color = "black", size = 0.8)+
   geom_vline(xintercept=0, linetype="dashed", color= "black", size = 0.8)+
@@ -431,7 +429,8 @@ biplot <-ggbiplot(pca, obs.scale=1, var.scale=1, groups=as.factor(happiness_cate
         panel.background = element_blank(),
         plot.title = element_text(size = 32, family = "sans", margin=margin(b = 20, unit = "pt")),
         plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
-  )
+  ) +
+  guides(colour = guide_legend(reverse=T, title="Happiness- \n score"))
 biplot
 
 ```

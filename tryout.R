@@ -79,14 +79,11 @@ scale_color_viridis()
 
 pca_plot <- ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=code ))+
   scale_color_viridis(end = 0.95, discrete=TRUE) +
-  ggforce::geom_mark_ellipse(inherit.aes = FALSE ,aes(x=PC1, y=PC2, group = happiness, color = happiness,  label = happiness)
-                             , tol = 0.001, alpha=0.1) +
+  ggforce::geom_mark_ellipse(inherit.aes = FALSE ,aes(x=PC1, y=PC2, group = happiness, color = happiness,  label = happiness), tol = 0.001, alpha=0.1) +
   geom_point(size=14,shape=16) +
   geom_text(hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
   xlab(paste("PC1: ", pc1_exp, "%")) +
   ylab(paste("PC2: ", pc2_exp, "%")) +
-
-  guides(colour=guide_legend(title="Happiness- \n score")) +
   theme_minimal() +
   geom_hline(yintercept=0, linetype="dashed", color = "black", size = 0.8)+
   geom_vline(xintercept=0, linetype="dashed", color= "black", size = 0.8)+
@@ -100,7 +97,8 @@ pca_plot <- ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=co
         panel.background = element_blank(),
         plot.title = element_text(size = 20, family = "sans", margin=margin(b = 20, unit = "pt")),
         plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
-        )
+        ) +
+  guides(colour = guide_legend(reverse=T, title="Happiness- \n score"))
 
 pca_plot
   
@@ -112,7 +110,6 @@ biplot <-ggbiplot(pca, obs.scale=1, var.scale=1, groups=as.factor(happiness_cate
   scale_color_viridis(end = 0.95, discrete=TRUE) +
   geom_point(aes(colour=as.factor(happiness_category)), size = 12, shape=16) + #plotting over to increase the point size
   geom_text(aes(label=pca_plot_data$code),hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
-  guides(colour=guide_legend(title="Happiness- \n score")) +
   theme_minimal() +
   geom_hline(yintercept=0, linetype="dashed", color = "black", size = 0.8)+
   geom_vline(xintercept=0, linetype="dashed", color= "black", size = 0.8)+
@@ -126,8 +123,9 @@ biplot <-ggbiplot(pca, obs.scale=1, var.scale=1, groups=as.factor(happiness_cate
         panel.background = element_blank(),
         plot.title = element_text(size = 20, family = "sans", margin=margin(b = 20, unit = "pt")),
         plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
-  )
-
+  )+
+  guides(colour = guide_legend(reverse=T, title="Happiness- \n score"))
+biplot
 
 ggsave(file="biplot.svg", plot=biplot, width=20, height=16)
 
@@ -330,8 +328,86 @@ layout(mm, widths=widths, heights=heights)
 plot(happy_SOM_model, shape="straight", palette.name=pal,)
 plot(happy_SOM_model, type = "dist.neighbours", shape="straight")
 plot(happy_SOM_model, type="mapping", pch=20, col = col_palette[as.integer(happiness_category)-2],shape = "straight",lw=5)
-legend("right", inset= .003, title="Happiness-scores", legend=legend_categories, fill=col_palette, horiz=FALSE, cex=1, bty="n")
+legend("left", inset= .000003, title="Happiness-scores", legend=legend_categories, fill=col_palette, horiz=FALSE, cex=1, bty="n")
 plot(happy_SOM_model, type="mapping", cex=0, col = col_palette[as.integer(happiness_category)-2],shape = "straight")
 text( som2pts(happy_SOM_model)[,1]+ runif(95)*0.5-0.25, som2pts(happy_SOM_model)[,2]+ runif(95)*0.5-0.25 ,labels=pca_plot_data$code, cex=0.6)
 
+
+
+
+som_2018 <- scaled_data_factors[,correlation_categories_without_happy]
+som_mat <- as.matrix(som_2018)
+
+col_palette <- viridis(7)[-1]
+
+som2pts <- function(x){
+  stopifnot("kohonen" %in% class(x))
+  x$grid$pts[x$unit.classif,]
+}
+
+happy_grid <- somgrid(xdim = 6, ydim = 6, topo = "hexagonal")
+happy_SOM_model <- som(X = som_mat, grid=happy_grid)
+
+legend_categories= c(unique(sort(happiness_category)))
+
+pal <- function(n) viridis(n)
+
+mm <- cbind(c(1,1,1),c(2,3,4))
+widths <- c(3,2); heights <- rep(1,1,1)
+layout(mm, widths=widths, heights=heights)
+
+plot(happy_SOM_model, shape="straight", palette.name=pal,)
+plot(happy_SOM_model, type = "dist.neighbours", shape="straight")
+plot(happy_SOM_model, type="mapping", pch=20, col = col_palette[as.integer(happiness_category)-2],shape = "straight",lw=5)
+legend("right", inset= .0003, title="Happiness-scores", legend=legend_categories, fill=col_palette, horiz=FALSE, cex=1, bty="n")
+plot(happy_SOM_model, type="mapping", cex=0, col = col_palette[as.integer(happiness_category)-2],shape = "straight")
+text( som2pts(happy_SOM_model)[,1]+ runif(95)*0.5-0.25, som2pts(happy_SOM_model)[,2]+ runif(95)*0.5-0.25 ,labels=pca_plot_data$code, cex=0.6)
+
+
+
+data_6 <- scaled_data_factors[(round(not_scaled_data_factors$Happiness) == 6),]
+data_6$outlier <- FALSE
+data_6[2,'outlier'] <- TRUE 
+data_6[27,'outlier'] <- TRUE 
+
+
+data_6 %>% select("Happiness","Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Tobacco","Internet","outlier") %>%
+  pivot_longer(., cols = c("Happiness","Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Tobacco","Internet"), names_to = "factor", values_to = "value") %>%
+  ggplot(aes(x = factor, y = value, )) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(aes(colour = outlier), size=2, alpha=0.9) +
+  scale_colour_manual(values=c("#A9A9A9", cred)) +
+  ggtitle("Outliers: UZB (Uzbekistan) and BEN(Benin) within happiness group 6") +
+  theme_minimal() +
+  theme(      panel.background = element_blank(),
+              plot.title = element_text(size = 18, family = "sans", margin=margin(b = 20, unit = "pt")),
+  )
+
+
+pca_plot <- ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=code ))+
+  scale_color_viridis(end = 0.95, discrete=TRUE) +
+  geom_point(size=14,shape=16) +
+  geom_text(hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
+  ggforce::geom_mark_ellipse(inherit.aes = FALSE ,aes(x=PC1, y=PC2, group = happiness, color = happiness,  label = happiness)
+                             , tol = 0.001, alpha=0.1) +
+  xlab(paste("PC1: ", pc1_exp, "%")) +
+  ylab(paste("PC2: ", pc2_exp, "%")) +
+  
+  guides(colour=guide_legend(title="Happiness- \n score")) +
+  theme_minimal() +
+  geom_hline(yintercept=0, linetype="dashed", color = "black", size = 0.8)+
+  geom_vline(xintercept=0, linetype="dashed", color= "black", size = 0.8)+
+  ggtitle("PCA Colored By Happiness") +
+  theme(axis.title.y = element_text(size = 18, family = "sans"),
+        legend.position = "right",
+        legend.title = element_text(size = 12, family = "sans"),
+        axis.text.x = element_text(colour ="black", size = 16, family = "sans"),
+        axis.text.y = element_text(colour ="black", size = 16, family = "sans"),
+        axis.title.x = element_text(colour = "black", size = 18, family = "sans"),
+        panel.background = element_blank(),
+        plot.title = element_text(size = 32, family = "sans", margin=margin(b = 20, unit = "pt")),
+        plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
+  ) +
+  guides(colour = guide_legend(reverse=T))
+pca_plot
 
