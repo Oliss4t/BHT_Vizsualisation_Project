@@ -27,6 +27,9 @@ library(viridis)
 library("ggbiplot")
 library(ggforce)
 library(kohonen)
+library(tidyr)
+library(dplyr)
+
 
 cred <- "#b30000"
 cgreen <- "#097969"
@@ -49,16 +52,19 @@ That is why we looked for an additional version of the happiness dataset, which 
 
 Based on the happiness dataset we want to try to answer the follwing leading questions.
 
-### What influences Happiness?
-Can happiness be explained by certain factors?
-What are those factors and how much do they influence the happiness?
-For this questions we need the raw values to build our analysis on top.
-To answer this questions we decided to add additional factors which might explain the different happiness levels.
-We were interested in how drug abuse correlates with happiness and found suiting datasets for alcohol consumption and tabaco consumtion.
-Additionally we were intereseted in how the modern user of social media influeces happiness. However we only found a fitting internet dataset which captures the percentage of the individuals in a country which is using the Internet.
+### What Influences Happiness?
 
-### Happiness over time?
-For the change of happiness we can use the plain happiness dataset as it captures the happiness scores  and the explained by parts for the 6 factors over time. Therefore we can calculate an visualize the changes over time.
+To answer this questions we need the raw values to build our analysis on top. We further decided to add additional factors which might explain the different happiness levels. We were interested in how drug abuse correlates with happiness and found suiting datasets for alcohol consumption and tabacco consumption. Additionally we were intereseted in how the modern user of social media influences happiness. However we only found a fitting internet dataset which captures the percentage of the individuals in a country which is using the Internet.
+
+Our questions are: 
+
+* Can happiness be explained by certain factors?
+* What are those factors and how much do they influence the happiness?
+
+### How Does Happiness Change Over Time?
+
+How does happiness change over time and can we see certain pattern?
+To anwer this question we need a change of happiness. We can use the plain happiness dataset, as it captures the happiness scores and the explained by parts for the 6 factors over time. Therefore we can calculate an visualize the happiness changes over time.
 
 ## Datasets and Pre-Processing
 For answering our two main questions we decided for the given reasons to create two datasets.
@@ -106,10 +112,13 @@ A more detailed explanation can be seen in the [Statistical Appendix](https://s3
 * Happiness: happiness score
 * Economy: Log GDP per capita
 * Social: (support) national average of the binary responses (either 0 or 1) to the GWP question
+  + "If you were in trouble, do you have relatives or friends you can count on to help you whenever you need them, or not?"
 * Health: Healthy life expectancy at birth from WHO
 * Freedom: Freedom to make life choices, national average of responses to the GWP question
 * Generosity: residual of regressing national average of response to the GWP question
 * Corruption: national average of the survey responses to two questions in the GWP, (either 0 or 1)
+  + "Is corruption widespread throughout the government or not"
+  + "Is corruption widespread within businesses or not?"
 * Positive: (affect) defined as the average of three positive affect measures in GWP: happiness, laugh and enjoyment
 * Negative: (affect)  defined as the average of three negative affect measures in GWP:  they are worry, sadness and anger
 * Government: Confidence in national government
@@ -185,7 +194,7 @@ plot_cor_matrix
 ggsave(file="./correlation_matrix.svg", plot=plot_cor_matrix, width=11, height=10)
 ```
 
-## What influences happiness?
+## What Influences Happiness?
 
 In this chapter we try to answer the question "What influences happiness?" by several methods of influential factors analysis. 
 
@@ -299,14 +308,13 @@ ggsave(file="./significant_factors.svg", plot=plot_significant_factors, width=10
 
 ```
 
+The lasso and the linear regression model agree on the significant factors: Social, Health and Corruption. 
+It seems plausible, that a high value in Social (answer to the questions: "If you were in trouble, do you have relatives or friends you can count on to help you whenever you need them, or not?") comes with high values of Happiness.
+The same for Health, even though the coefficients are not as big. Health captures the "Healthy life expectancy at birth from WHO" and therefore is foundation for Happiness. High values on Corruption on the other hand results in an Happiness decrease. Which is also plausible as an unfair environment, either in business or in government, results in an overall decrease in happiness.  
+
 ### PCA and Biplot
 
-Die Hauptkomponentenanalyse geht von der Annahme aus, dass es bei stark korrelierten Größen eine dritte Größe gibt, die nicht direkt messbar ist und die hinter diesen korrelierten Variablen steht und sich quasi in ihnen äußert. Das bedeutet, die messbaren Größen sind nur eine andere Erscheinungsform von Größen, die im Hintergrund stehen und nicht direkt gemessen werden können. Man nennt diese im Hintergrund stehenden Größen Hauptkomponenten (Principal Components), Latent Variables oder Faktoren. Ziel der Hauptkomponentenanalyse ist es, solche Hintergrundgrößen bzw. Faktoren aus den gemessenen Daten zu ermitteln und die beobachteten Zusammenhänge möglichst vollständig zu erklären. Mit Hilfe der Hauptkomponentenanalyse lassen sich demzufolge komplexe Informationen auf nur wenige, orthogonale Informationen verdichten.
-
-Die Hauptkomponentenanalyse bestimmt die Faktoren nach rein mathematischen Gesichtspunkten. Da der erste Faktor immer in die Richtung der maximalen Varianz in den Daten zeigt, werden dadurch die real gemessen Informationen am besten repräsentiert.
-
-
-sing a sample of six hundred participants, linear regression model was fitted and collinearity between predictors was detected using Variance Inflation Factor (VIF). After confirming the existence of high relationship between independent variables, the principal components was utilized to find the possible linear combination of variables that can produce large variance without much loss of information. Thus, the set of correlated variables were reduced into new minimum number of variables which are independent on each other but contained linear combination of the related variables. In order to check the presence of relationship between predictors, dependent variables were regressed on these five principal components. The results show that VIF values for each predictor ranged from 1 to 3 which indicates that multicollinearity problem was eliminated.
+Principal component analysis is based on the assumption that, in the case of strongly correlated variables, there is a third variable which cannot be measured directly and which stands behind these correlated variables and, as it were, manifests itself in them. This means that the measurable variables are just another manifestation of variables that are in the background and cannot be measured directly. These background variables are called principal components. The aim of principal component analysis is to identify such background variables or factors from the measured data and to explain the observed relationships as completely as possible. 
 
 For the PCA we are using the scaled factors without the happiness score. The first two PCs explain 59.01 % of the variation together.
 
@@ -316,32 +324,17 @@ PC1 explains 39.07 % of the variation and the coefficients are the following:
  +0.115*Generosity+-0.182*Positive+0.317*Negative+0.132*Government+-0.289*Alcohol \\
  +0.069*Population+-0.164*Tobacco+-0.411*Internet$$
 
-The first PCA plot colored by the rounded happiness scores, clusters the countries quite good.
-For low values on PC1 and PC2 we the really high happiness scores. The top 3 countries for 2018 (Finland, Denmark and Switzerland) are all in that region.
-Also interestting is that most of the countries in the lower left are from 'Western Europe', expecpt of 'New Zealand', 'Australia' and 'Canada' with are from 'North America and ANZ'.
-When we move from left to right, the happiness scores decrease. The values 8,7,6,5,4 are quite good seperated. An exeption is the happiness category of 3. They are spread out on the right half side of the plot.   
-
-
-
-
-An interesting outlier ist Benin (BEN) on the middle right. Benin belongs to the happiness category 6 but is on the verry right side.
-Another outlier ist Botswana (BWA) which belongs to the happiness category 3 but is in the verry middle.
-
-
-
-With the coefficients and the 
-
-coefficients 
-
-
-
- 
 PC2 explains 19.94% of the variation and the coefficients are the following:
  
   $$PC2=0.059*Economy+0.014*Social+0.054*Health+-0.478*Freedom+0.388*Corruption \\
   +-0.396*Generosity+-0.384*Positive+0.108*Negative+-0.467*Government+0.054*Alcohol \\
   +-0.078*Population+0.246*Tobacco+0.103*Internet$$
 
+The PCA plot colored by the rounded happiness scores, clusters the countries quite good. The added ellipses give a quick visual idea in which area which happiness levels are located. 
+For low values on PC1 and PC2 we the really high happiness scores. The top 3 countries for 2018 (Finland, Denmark and Switzerland) are all in that region.
+Also interesting is that most of the countries in the lower left are from 'Western Europe', expect of 'New Zealand', 'Australia' and 'Canada' with are from 'North America and ANZ'. We follow up on this finding in chapter "What further influences happiness?". 
+
+When we move from left to right, the happiness scores decrease. The values 8,7,6,5,4 are quite good separated. Therefore PC1 captures the overall Happiness. However the separation between happiness scores is not exact. Happiness scores 8 and 7 are quite good seperated as the happiness scores 8 are quite close together. Happiness scores 7 and 6 overlapping about 50%, but a separation is still recognizable. Happiness score 6 has two outliers. UZB (Uzbekistan) and BEN(Benin), that is why the ellipse results in this big area. Happiness score 5 has no big outliers, but the overlap between 5 and 6 is even bigger than between 6 and 7.  Happiness scores 5 and 4 overlapping again about 50%, therefore a separation is visible. Happiness score 3 however is only consisting out of 3 points and is not good seperated. Happiness score 3 has crossovers with 4,5 and 6. PC1 can therefore separate happier countries better than unhappier ones.  
 
 ```{r echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE}
 
@@ -386,6 +379,37 @@ pca_plot <- ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=co
 pca_plot
 ```
 
+ 
+After plotting the two outliers, UZB (Uzbekistan) and BEN(Benin), within their happiness group 6, we still can see that they are outliers in a lot of categories compared to the outer countries in happiness class 6.
+
+```{r echo=FALSE, fig.height=5, fig.width=10, message=FALSE, warning=FALSE}
+#kable(outlier, "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+data_6 <- scaled_data_factors[(round(not_scaled_data_factors$Happiness) == 6),]
+data_6$outlier <- FALSE
+data_6[2,'outlier'] <- TRUE 
+data_6[27,'outlier'] <- TRUE 
+
+
+data_6 %>% select("Happiness","Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Tobacco","Internet","outlier") %>%
+  pivot_longer(., cols = c("Happiness","Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Tobacco","Internet"), names_to = "factor", values_to = "value") %>%
+  ggplot(aes(x = factor, y = value, )) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(aes(colour = outlier), size=2, alpha=0.9) +
+  scale_colour_manual(values=c("#A9A9A9", cred)) +
+  ggtitle("Outliers: UZB (Uzbekistan) and BEN(Benin) within happiness group 6") +
+  theme_minimal() +
+    theme(      panel.background = element_blank(),
+        plot.title = element_text(size = 18, family = "sans", margin=margin(b = 20, unit = "pt")),
+        )
+
+```
+
+Next on we looked at the biplot where we can see how the original variables correlate with the principal components.
+
+For PC1 we have some strong  correlations for: Internet, Economy, Health and Social. Alcohol is as well correlated with PC1, but not as strong.
+Negative is also correlated with PC1, it matches quit good, that high values in Negative results in lower happiness.
+
+For PC2 the strongest correlations are: Positive, Freedom, Generosity, Government and Corruption. The PC2 therefore splits quite good between (Positive, Freedom) and (Corruption). We can also see that visually as the 'Western Europe' countries are on the side of (Positive, Freedom). 
 
 ```{r echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE}
 
@@ -413,11 +437,12 @@ biplot
 ```
 
 
-
 ### SOM
 
-```{r eval=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE, include=FALSE}
-som_2018 <- not_scaled_data_factors[,correlation_categories_without_happy]
+Nextup, we build the self-organizing map. The results in the SOM mapping match out results from the PCA perfectly. We have the same distribution of the happiness categories (8-3). Via the codes plot we can also further confirm our results as the happiest countries (lower left) have the highest values in Internet, Economy, Social, Health and Freedom, an the lowest values for Corruption. For the unhappiest countries it is the other way round.
+
+```{r eval=FALSE, echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE,fig.show='hide'}
+som_2018 <- scaled_data_factors[,correlation_categories_without_happy]
 som_mat <- as.matrix(som_2018)
 
 col_palette <- viridis(7)[-1]
@@ -448,13 +473,13 @@ text( som2pts(happy_SOM_model)[,1]+ runif(95)*0.5-0.25, som2pts(happy_SOM_model)
 
 ```
 
+SOMs 
 
+![SOM](./figs/SOM_scal_svg.svg)
 
-![SOM](./figs/SOM_svg.svg)
 ### What further influences happiness?
 
-Besides all the numeric factors, looking at the visualization below, there is a clear difference between the happieness distributions for Regions.
-The happiest
+Let us now pich up our finding from the pca regarding the grouping of the countries from 'Western Europe' and 'North America and ANZ' in the lower left (happy region) again. Below we plotted the happiness of the counties by region. We can see a clear difference between the happieness distributions for regions. 'Western Europe' and 'North America and ANZ' are the happiest regions, 'Sub-Saharan Africa' is the region with the unhappiest countries, but has quite a wide spread.
 
 ```{r echo=FALSE, fig.height=7, fig.width=9, message=FALSE, warning=FALSE}
 col_palette <- viridis(11)[-1]

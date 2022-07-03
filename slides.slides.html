@@ -14403,15 +14403,33 @@ div.jp-OutputPrompt {
 </div></section></section><section><section>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="Datasets-and-Pre-Processing">Datasets and Pre-Processing<a class="anchor-link" href="#Datasets-and-Pre-Processing">&#182;</a></h1><h2 id="Over-Time-Dataset">Over Time Dataset<a class="anchor-link" href="#Over-Time-Dataset">&#182;</a></h2><p>The World Happiness Report is a landmark survey of the state of global happiness.The happiness scores and rankings use data from the Gallup World Poll (GWP). The scores are based on answers to the main life evaluation question asked in the poll. This question, known as the Cantril ladder, asks respondents to think of a ladder with the best possible life for them being a 10 and the worst possible life being a 0 and to rate their own current lives on that scale.</p>
-<p>Further, the Happiness Report includes additional 6 factors (levels of GDP, life expectancy, generosity, social support, freedom, and corruption) which show the estimated extent to which each of the six factor is estimated to contribute to making life evaluations (happiness score) higher in each country than in Dystopia. The underlying raw datapoints for those estimations are provided by other organisations (e.g. WHO) or from the Gallup World Poll question results. Dystopia in this context, is a hypothetical country with values equal to the world’s lowest national averages for each of the six factors raw values. The purpose in establishing Dystopia is to have a benchmark against which all countries can be favorably compared (no country performs more poorly than Dystopia) in terms of each of the six key variables. Since life would be very unpleasant in a country with the world’s lowest incomes, lowest life expectancy, lowest generosity, most corruption, least freedom, and least social support, it is referred to as “Dystopia,” in contrast to Utopia.</p>
+<h1 id="Questions">Questions<a class="anchor-link" href="#Questions">&#182;</a></h1><h2 id="What-influences-Happiness?">What influences Happiness?<a class="anchor-link" href="#What-influences-Happiness?">&#182;</a></h2><ul>
+<li>Can happiness be explained by certain factors?</li>
+<li>What are those factors and how much do they influence the happiness?</li>
+</ul>
+<h2 id="How-Does-Happiness-Change-Over-Time?">How Does Happiness Change Over Time?<a class="anchor-link" href="#How-Does-Happiness-Change-Over-Time?">&#182;</a></h2>
+</div>
+</div></section></section><section><section>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h1 id="Datasets-and-Pre-Processing">Datasets and Pre-Processing<a class="anchor-link" href="#Datasets-and-Pre-Processing">&#182;</a></h1><h2 id="Over-Time-Dataset">Over Time Dataset<a class="anchor-link" href="#Over-Time-Dataset">&#182;</a></h2><p>The World Happiness Report is a landmark survey of the state of global happiness.The happiness scores and rankings use data from the Gallup World Poll (GWP). The scores are based on answers to the main life evaluation question asked in the poll.</p>
+<p>The Happiness Report includes additional 6 factors which show the estimated extent to which each of the six factor is estimated to contribute to making life evaluations (happiness score) higher in each country than in Dystopia</p>
+<ul>
+<li>levels of GDP</li>
+<li>life expectancy</li>
+<li>generosity</li>
+<li>social support</li>
+<li>freedom</li>
+<li><p>corruption</p>
 <p>happiness score can be calculated by: $$\sum_{i=1}^{6} factorvalue_i + dystopiahappiness + residual $$</p>
+</li>
+</ul>
 
 </div>
 </div></section><section><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[31]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-r"><pre><span></span><span class="nf">load_data_explained_2015</span><span class="p">()</span>
@@ -14508,7 +14526,7 @@ div.jp-OutputPrompt {
 </div></section><section><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[33]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-r"><pre><span></span><span class="nf">load_data_explained_preprocessed</span><span class="p">()</span>
@@ -14618,11 +14636,25 @@ div.jp-OutputPrompt {
 <li>Year</li>
 <li>Happiness: happiness score</li>
 <li>Economy: Log GDP per capita</li>
-<li>Social: (support) national average of the binary responses (either 0 or 1) to the GWP question</li>
+<li>Social: (support) national average of the binary responses (either 0 or 1) to the GWP question<ul>
+<li>“If you were in trouble, do you have relatives or friends you can count on to help you whenever you need them, or not?”</li>
+</ul>
+</li>
 <li>Health: Healthy life expectancy at birth from WHO</li>
 <li>Freedom: Freedom to make life choices, national average of responses to the GWP question</li>
 <li>Generosity: residual of regressing national average of response to the GWP question</li>
-<li>Corruption: national average of the survey responses to two questions in the GWP, (either 0 or 1)</li>
+<li>Corruption: national average of the survey responses to two questions in the GWP, (either 0 or 1)<ul>
+<li>"Is corruption widespread throughout the government or not"</li>
+<li>"Is corruption widespread within businesses or not?"</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div></section><section>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<ul>
 <li>Positive: (affect) defined as the average of three positive affect measures in GWP: happiness, laugh and enjoyment</li>
 <li>Negative: (affect)  defined as the average of three negative affect measures in GWP:  they are worry, sadness and anger</li>
 <li>Government: Confidence in national government</li>
@@ -14649,7 +14681,7 @@ div.jp-OutputPrompt {
 </div></section><section><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[36]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[11]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-r"><pre><span></span><span class="nf">load_data_raw_preprocessed</span><span class="p">()</span>
@@ -14770,22 +14802,52 @@ div.jp-OutputPrompt {
 </div></section></section><section><section>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h2 id="Preliminary-Analysis">Preliminary Analysis<a class="anchor-link" href="#Preliminary-Analysis">&#182;</a></h2><ul>
+<li>scaling: $\frac{(x - mean(x))}{sd(x)}$</li>
+<li>correlation matrix</li>
+</ul>
+
+</div>
+</div></section><section>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <p><img src="./figs/correlation_matrix.svg" alt="Correlation Matrix"></p>
 
 </div>
 </div></section></section><section><section>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><img src="./figs/VIF_full_model.svg" alt="VIF Full Model"></p>
+<h2 id="What-influences-happiness?">What influences happiness?<a class="anchor-link" href="#What-influences-happiness?">&#182;</a></h2><ul>
+<li>Regression</li>
+<li>PCA and Biplot</li>
+<li>SOM</li>
+<li>Happiness and Tabacco per Region </li>
+</ul>
 
 </div>
 </div></section></section><section><section>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h3 id="Regression">Regression<a class="anchor-link" href="#Regression">&#182;</a></h3><ul>
+<li>Full Model: R-squared of <strong>0.8063</strong></li>
+<li>multicollinearity</li>
+<li>Small Model: R-squared of <strong>0.7745</strong></li>
+</ul>
+
+</div>
+</div></section><section>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><img src="./figs/VIF_full_model.svg" alt="VIF Full Model"></p>
+
+</div>
+</div></section><section>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <p><img src="./figs/VIF_small_model.svg" alt="VIF Small Model"></p>
 
 </div>
-</div></section></section><section><section>
+</div></section><section>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <p><img src="./figs/significant_factors.svg" alt="Significant Factors"></p>
@@ -14794,10 +14856,29 @@ div.jp-OutputPrompt {
 </div></section></section><section><section>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h3 id="PCA-and-Biplot">PCA and Biplot<a class="anchor-link" href="#PCA-and-Biplot">&#182;</a></h3><p>PC1 explains 39.07 % of the variation and the coefficients are the following:</p>
+<p>$$PC1=-0.415*Economy+-0.397*Social+-0.395*Health+-0.174*Freedom+0.192*Corruption \\
+ +0.115*Generosity+-0.182*Positive+0.317*Negative+0.132*Government+-0.289*Alcohol \\
+ +0.069*Population+-0.164*Tobacco+-0.411*Internet$$</p>
+<p>PC2 explains 19.94% of the variation and the coefficients are the following:</p>
+<p>$$PC2=0.059*Economy+0.014*Social+0.054*Health+-0.478*Freedom+0.388*Corruption \\
+  +-0.396*Generosity+-0.384*Positive+0.108*Negative+-0.467*Government+0.054*Alcohol \\
+  +-0.078*Population+0.246*Tobacco+0.103*Internet$$</p>
+
+</div>
+</div></section><section>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <p><img src="./figs/pcaplot.svg" alt="PCA"></p>
 
 </div>
-</div></section></section><section><section>
+</div></section><section>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><img src="./figs/outliers_uzb_ben.svg" alt="Outliers"></p>
+
+</div>
+</div></section><section>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <p><img src="./figs/biplot.svg" alt="Biplot"></p>
@@ -14806,13 +14887,23 @@ div.jp-OutputPrompt {
 </div></section></section><section><section>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><img src="./figs/SOM_svg.svg" alt="SOM"></p>
+<h3 id="SOM">SOM<a class="anchor-link" href="#SOM">&#182;</a></h3>
+</div>
+</div></section><section>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p><img src="./figs/SOM_scal_svg.svg" alt="SOM"></p>
 
 </div>
-</div></section></section><section><section><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+</div></section></section><section><section>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h3 id="Happiness-and-Tabacco-per-Region">Happiness and Tabacco per Region<a class="anchor-link" href="#Happiness-and-Tabacco-per-Region">&#182;</a></h3>
+</div>
+</div></section><section><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[63]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[12]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-r"><pre><span></span><span class="nf">iframe</span><span class="p">(</span><span class="n">url_link</span><span class="o">=</span><span class="s">&#39;./figs/happiness_region.html&#39;</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="m">900</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="m">1600</span><span class="p">)</span>
@@ -14843,7 +14934,7 @@ div.jp-OutputPrompt {
 		
 	</head>
 	<body>
-		<iframe width="900" height="500" src="./figs/happiness_region.html"></iframe>
+		<iframe width="1600" height="900" src="./figs/happiness_region.html"></iframe>
 	</body>
 </html>
 
@@ -14858,7 +14949,7 @@ div.jp-OutputPrompt {
 </div></section></section><section><section><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[64]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-r"><pre><span></span><span class="nf">iframe</span><span class="p">(</span><span class="n">url_link</span><span class="o">=</span><span class="s">&#39;./figs/map.html&#39;</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="m">900</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="m">1600</span><span class="p">)</span>
@@ -14889,7 +14980,7 @@ div.jp-OutputPrompt {
 		
 	</head>
 	<body>
-		<iframe width="900" height="500" src="./figs/map.html"></iframe>
+		<iframe width="1600" height="900" src="./figs/map.html"></iframe>
 	</body>
 </html>
 

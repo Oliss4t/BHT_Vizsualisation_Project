@@ -302,3 +302,36 @@ plot(happy_SOM_model, type="mapping", cex=0, col = col_palette[as.integer(happin
 text( som2pts(happy_SOM_model)[,1]+ runif(95)*0.5-0.25, som2pts(happy_SOM_model)[,2]+ runif(95)*0.5-0.25 ,labels=pca_plot_data$code, cex=0.6)
 
 
+
+
+
+
+som_2018 <- scaled_data_factors[,correlation_categories_without_happy]
+som_mat <- as.matrix(som_2018)
+
+col_palette <- viridis(7)[-1]
+
+som2pts <- function(x){
+  stopifnot("kohonen" %in% class(x))
+  x$grid$pts[x$unit.classif,]
+}
+
+happy_grid <- somgrid(xdim = 6, ydim = 6, topo = "hexagonal")
+happy_SOM_model <- som(X = som_mat, grid=happy_grid)
+
+legend_categories= c(unique(sort(happiness_category)))
+
+pal <- function(n) viridis(n)
+
+mm <- cbind(c(1,1,1),c(2,3,4))
+widths <- c(3,2); heights <- rep(1,1,1)
+layout(mm, widths=widths, heights=heights)
+
+plot(happy_SOM_model, shape="straight", palette.name=pal,)
+plot(happy_SOM_model, type = "dist.neighbours", shape="straight")
+plot(happy_SOM_model, type="mapping", pch=20, col = col_palette[as.integer(happiness_category)-2],shape = "straight",lw=5)
+legend("right", inset= .003, title="Happiness-scores", legend=legend_categories, fill=col_palette, horiz=FALSE, cex=1, bty="n")
+plot(happy_SOM_model, type="mapping", cex=0, col = col_palette[as.integer(happiness_category)-2],shape = "straight")
+text( som2pts(happy_SOM_model)[,1]+ runif(95)*0.5-0.25, som2pts(happy_SOM_model)[,2]+ runif(95)*0.5-0.25 ,labels=pca_plot_data$code, cex=0.6)
+
+
