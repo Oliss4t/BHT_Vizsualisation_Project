@@ -6,6 +6,9 @@ date: "22 6 2022"
 output:
   html_document: default
   pdf_document: default
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
 
 ```{r setup, include=FALSE}
@@ -38,13 +41,21 @@ cgreen <- "#097969"
 
 ## Happiness Dataset
 
-The World Happiness Report is a landmark survey of the state of global happiness.The happiness scores and rankings use data from the Gallup World Poll (GWP). The scores are based on answers to the main life evaluation question asked in the poll. This question, known as the Cantril ladder, asks respondents to think of a ladder with the best possible life for them being a 10 and the worst possible life being a 0 and to rate their own current lives on that scale.
+The World Happiness Report is a landmark survey of the state of global happiness.The happiness scores and rankings use data from the Gallup World Poll (GWP).
+The scores are based on answers to the main life evaluation question asked in the poll.
+This question, known as the Cantril ladder, asks respondents to think of a ladder with the best possible life for them being a 10 and the worst possible life being a 0 and to rate their own current lives on that scale.
 
-Further, the Happiness Report includes additional 6 factors (levels of GDP, life expectancy, generosity, social support, freedom, and corruption) which show the estimated extent to which each of the six factor is estimated to contribute to making life evaluations (happiness score) higher in each country than in Dystopia. The underlying raw datapoints for those estimations are provided by other organisations (e.g. WHO) or from the Gallup World Poll question results. Dystopia in this context, is a hypothetical country with values equal to the world’s lowest national averages for each of the six factors raw values. The purpose in establishing Dystopia is to have a benchmark against which all countries can be favorably compared (no country performs more poorly than Dystopia) in terms of each of the six key variables. Since life would be very unpleasant in a country with the world’s lowest incomes, lowest life expectancy, lowest generosity, most corruption, least freedom, and least social support, it is referred to as “Dystopia,” in contrast to Utopia.
+Further, the Happiness Report includes additional 6 factors (levels of GDP, life expectancy, generosity, social support, freedom, and corruption) which show the estimated extent to which each of the six factor is estimated to contribute to making life evaluations (happiness score) higher in each country than in Dystopia.
+The underlying raw datapoints for those estimations are provided by other organisations (e.g. WHO) or from the Gallup World Poll question results.
+Dystopia in this context, is a hypothetical country with values equal to the world's lowest national averages for each of the six factors raw values.
+The purpose in establishing Dystopia is to have a benchmark against which all countries can be favorably compared (no country performs more poorly than Dystopia) in terms of each of the six key variables.
+Since life would be very unpleasant in a country with the world's lowest incomes, lowest life expectancy, lowest generosity, most corruption, least freedom, and least social support, it is referred to as "Dystopia," in contrast to Utopia.
 
-Thus, each of the 6 factors values explain the contribution of each factor for the higher happiness score in a certain  country than in Dystopia. That is why the happiness score can be calculated by: $$\sum_{i=1}^{6} factorvalue_i + dystopiahappiness + residual $$
+Thus, each of the 6 factors values explain the contribution of each factor for the higher happiness score in a certain country than in Dystopia.
+That is why the happiness score can be calculated by: $$\sum_{i=1}^{6} factorvalue_i + dystopiahappiness + residual $$
 
-This makes it clear, that the 6 factors are already the result of some sort of estimation and therefore cannot be used for analysing the variable importance. The resulting regression coefficients e.g. would not be helpful at all,  as by including the residual in the dataset, the interception would be 0 and all the coefficients would result in 1.
+This makes it clear, that the 6 factors are already the result of some sort of estimation and therefore cannot be used for analysing the variable importance.
+The resulting regression coefficients e.g. would not be helpful at all, as by including the residual in the dataset, the interception would be 0 and all the coefficients would result in 1.
 
 That is why we looked for an additional version of the happiness dataset, which includes the actual raw values and which we can therefore use for analysing the variable importance and use in data dimension reduction steps.
 
@@ -54,80 +65,93 @@ Based on the happiness dataset we want to try to answer the follwing leading que
 
 ### What Influences Happiness?
 
-To answer this questions we need the raw values to build our analysis on top. We further decided to add additional factors which might explain the different happiness levels. We were interested in how drug abuse correlates with happiness and found suiting datasets for alcohol consumption and tabacco consumption. Additionally we were intereseted in how the modern user of social media influences happiness. However we only found a fitting internet dataset which captures the percentage of the individuals in a country which is using the Internet.
+To answer this questions we need the raw values to build our analysis on top.
+We further decided to add additional factors which might explain the different happiness levels.
+We were interested in how drug abuse correlates with happiness and found suiting datasets for alcohol consumption and tabacco consumption.
+Additionally we were intereseted in how the modern user of social media influences happiness.
+However we only found a fitting internet dataset which captures the percentage of the individuals in a country which is using the Internet.
 
-Our questions are: 
+Our questions are:
 
-* Can happiness be explained by certain factors?
-* What are those factors and how much do they influence the happiness?
+-   Can happiness be explained by certain factors?
+-   What are those factors and how much do they influence the happiness?
 
 ### How Does Happiness Change Over Time?
 
 How does happiness change over time and can we see certain pattern?
-To anwer this question we need a change of happiness. We can use the plain happiness dataset, as it captures the happiness scores and the explained by parts for the 6 factors over time. Therefore we can calculate an visualize the happiness changes over time.
+To anwer this question we need a change of happiness.
+We can use the plain happiness dataset, as it captures the happiness scores and the explained by parts for the 6 factors over time.
+Therefore we can calculate an visualize the happiness changes over time.
 
 ## Datasets and Pre-Processing
+
 For answering our two main questions we decided for the given reasons to create two datasets.
 
 ### Over Time Dataset
-For the answering the happiness change over time we used the data from the [World Happiness Report](https://www.kaggle.com/datasets/mathurinache/world-happiness-report) which is ranging from 2015 to 2022. An example of 2015 can be seen in the table below. 
+
+For the answering the happiness change over time we used the data from the [World Happiness Report](https://www.kaggle.com/datasets/mathurinache/world-happiness-report) which is ranging from 2015 to 2022.
+An example of 2015 can be seen in the table below.
+
 ```{r, echo=FALSE}
 h_sample_2015 <- read.csv(file = './data/happy/2015.csv')
 kable(h_sample_2015[1:3,], "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
 To get our final dataset we had to do some [preprocessing](./preprocessing.ipynb), which included joining the individual year files, renaming the columns and cleaning the data (region, NaN).
-The dataset has 1185 rows and 11 columns. The resulting [over time dataset](./data/preprocessed_data_happy_incl_region_no_nan.csv) can be seen below.
+The dataset has 1185 rows and 11 columns.
+The resulting [over time dataset](./data/preprocessed_data_happy_incl_region_no_nan.csv) can be seen below.
+
 ```{r, echo=FALSE}
 h_sample_2015 <- read.csv(file = './data/preprocessed_data_happy_incl_region_no_nan.csv', sep=";" )
 kable(h_sample_2015[1:3,2:12], "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
-
 ### Influential Factors Dataset
 
-For answering the questions "What influences happiness?" we had to use the [raw data](./data/until_2018_raw_values.csv) of the factors and not their "explained by" values. In addition, we wanted to add futher factors and added the following three datasets:
+For answering the questions "What influences happiness?" we had to use the [raw data](./data/until_2018_raw_values.csv) of the factors and not their "explained by" values.
+In addition, we wanted to add futher factors and added the following three datasets:
 
-* [smoking dataset](https://ourworldindata.org/smoking): 
-* [alcohol dataset](https://www.kaggle.com/datasets/pralabhpoudel/alcohol-consumption-by-country?resource=download)
-* [internet dataset](https://data.worldbank.org/indicator/IT.NET.USER.ZS)
+-   [smoking dataset](https://ourworldindata.org/smoking):
+-   [alcohol dataset](https://www.kaggle.com/datasets/pralabhpoudel/alcohol-consumption-by-country?resource=download)
+-   [internet dataset](https://data.worldbank.org/indicator/IT.NET.USER.ZS)
 
 By merging the datasets we have now four additional factors.
 
 To join all the different datasets we had to do some preprocessing which can be seen in the [preprocessing](./preprocessing.ipynb) step.
 The main steps where cleaning the data (region, countrycode, NaN) and joining the datasets based on the year and the countrycode.
 
-After joining we noticed, that the three additional data sets do not contain data for the whole timespan 2015-2022.(fig. missing values full data)
-Therefore, we decided to use only one year for analysing the influential factors.
+After joining we noticed, that the three additional data sets do not contain data for the whole timespan 2015-2022.(fig. missing values full data) Therefore, we decided to use only one year for analysing the influential factors.
 
 ![missing values full data](./figs/full_data_missing_values.png)
 
-We inspected the missing values of each year and choose the year with the lowes missing values, year 2018 (fig "missing values 2018"). Then we excluded all rows containing missing values again. Figure "missing values 2017" shows e.g. that the smoking and the alcohol dataset did not contain any values for the year 2017.  We also renamed the columns for having shorter labels. 
+We inspected the missing values of each year and choose the year with the lowes missing values, year 2018 (fig "missing values 2018").
+Then we excluded all rows containing missing values again.
+Figure "missing values 2017" shows e.g. that the smoking and the alcohol dataset did not contain any values for the year 2017.
+We also renamed the columns for having shorter labels.
 
 The final [influential factors dataset](./data/preprocessed_raw_2018_no_nan.csv) consists of 96 rows (countries for the year 2018) and 18 columns which quickly explained.
 A more detailed explanation can be seen in the [Statistical Appendix](https://s3.amazonaws.com/happiness-report/2018/Appendix1ofChapter2.pdf) of the world happiness report.
 
-* Country
-* Year
-* Happiness: happiness score
-* Economy: Log GDP per capita
-* Social: (support) national average of the binary responses (either 0 or 1) to the GWP question
-  + "If you were in trouble, do you have relatives or friends you can count on to help you whenever you need them, or not?"
-* Health: Healthy life expectancy at birth from WHO
-* Freedom: Freedom to make life choices, national average of responses to the GWP question
-* Generosity: residual of regressing national average of response to the GWP question
-* Corruption: national average of the survey responses to two questions in the GWP, (either 0 or 1)
-  + "Is corruption widespread throughout the government or not"
-  + "Is corruption widespread within businesses or not?"
-* Positive: (affect) defined as the average of three positive affect measures in GWP: happiness, laugh and enjoyment
-* Negative: (affect)  defined as the average of three negative affect measures in GWP:  they are worry, sadness and anger
-* Government: Confidence in national government
-* Code: Country code
-* Alcohol: Total alcohol consumption per capita (liters of pure alcohol, projected estimates, 15+ years of age)
-* Population: Population (historical estimates)
-* Tobacco: Prevalence of current tobacco use (% of adults)
-* Internet: Individuals using the Internet (% of population)
-
+-   Country
+-   Year
+-   Happiness: happiness score
+-   Economy: Log GDP per capita
+-   Social: (support) national average of the binary responses (either 0 or 1) to the GWP question
+    -   "If you were in trouble, do you have relatives or friends you can count on to help you whenever you need them, or not?"
+-   Health: Healthy life expectancy at birth from WHO
+-   Freedom: Freedom to make life choices, national average of responses to the GWP question
+-   Generosity: residual of regressing national average of response to the GWP question
+-   Corruption: national average of the survey responses to two questions in the GWP, (either 0 or 1)
+    -   "Is corruption widespread throughout the government or not"
+    -   "Is corruption widespread within businesses or not?"
+-   Positive: (affect) defined as the average of three positive affect measures in GWP: happiness, laugh and enjoyment
+-   Negative: (affect) defined as the average of three negative affect measures in GWP: they are worry, sadness and anger
+-   Government: Confidence in national government
+-   Code: Country code
+-   Alcohol: Total alcohol consumption per capita (liters of pure alcohol, projected estimates, 15+ years of age)
+-   Population: Population (historical estimates)
+-   Tobacco: Prevalence of current tobacco use (% of adults)
+-   Internet: Individuals using the Internet (% of population)
 
 ```{r, echo=FALSE}
 data_2018 <- read.csv(file = './data/preprocessed_raw_2018_no_nan.csv')
@@ -138,26 +162,29 @@ colnames(data_2018)[12] <- "Negative"
 kable(data_2018[1:3,1:ncol(data_2018)], "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
-
-
 ![missing values 2017](./figs/2017_missing_values.png)
-
 
 ![missing values 2018](./figs/2018_missing_values.png)
 
 ## Preliminary Analysis
 
-One of the objectives of preliminary data analysis to get a feel for the data you are dealing with by describing the key features of the data and summarizing the results. We are focusing on the second dataset, the [influential factors dataset]("./data/preprocessed_raw_2018_no_nan.csv"), which includes the raw values and not the explained by values.
+One of the objectives of preliminary data analysis to get a feel for the data you are dealing with by describing the key features of the data and summarizing the results.
+We are focusing on the second dataset, the [influential factors dataset](%22./data/preprocessed_raw_2018_no_nan.csv%22), which includes the raw values and not the explained by values.
 
 ### Boxplots and Data Scaling
+
 ```{r echo=FALSE}
 correlation_categories <- c("Happiness","Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet")
 ```
-First we check via the summary how all the explanatory variables are distributed. As we can see they are on different scales, especially "Health","Population" and "Internet". As we don't want to have data reduction analysis be more driven on the larges distances, we scale them by $\frac{(x - mean(x))}{sd(x)}$
+
+First we check via the summary how all the explanatory variables are distributed.
+As we can see they are on different scales, especially "Health","Population" and "Internet".
+As we don't want to have data reduction analysis be more driven on the larges distances, we scale them by $\frac{(x - mean(x))}{sd(x)}$
 
 ```{r echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
 summary(data_2018[,correlation_categories])
 ```
+
 ```{r echo=FALSE, fig.height=7, fig.width=9, message=FALSE, warning=FALSE}
 not_scaled_data_factors <- data.frame(data_2018[,correlation_categories])
 scaled_data_factors <- data.frame(scale(data_2018[,correlation_categories]))
@@ -172,21 +199,22 @@ ggplot(data_long, aes(x = variable, y = value)) +
 
 ```
 
-We can see that every factor is now on the same scale. We have some outliers for Corruption, Generosity and Population.
+We can see that every factor is now on the same scale.
+We have some outliers for Corruption, Generosity and Population.
 
 ### Correlation Matrix
 
 On the correlation matrix plot we see, that happiness has the strongest correlation with Economy (0.801), Internet (0.786), Social (0.768) and Health (0.767).
 For the correlations between the explanatory variables the following stand out:
 
-* 0.938: Economy and Internet
-* 0.878: Health and Internet
-* 0.875: Economy and Health
-* 0.807: Economy and Social
-* 0.791: Social and Internet
-* 0.753: Social and Health
-* 0.659: Freedom and Positive
-* -0.646: Social and Negative
+-   0.938: Economy and Internet
+-   0.878: Health and Internet
+-   0.875: Economy and Health
+-   0.807: Economy and Social
+-   0.791: Social and Internet
+-   0.753: Social and Health
+-   0.659: Freedom and Positive
+-   -0.646: Social and Negative
 
 ```{r echo=FALSE, fig.height=10, fig.width=11, message=FALSE, warning=FALSE}
 plot_cor_matrix <- ggpairs(scaled_data_factors, title="Correlation Matrix For Influential Factors Analysis", )
@@ -196,18 +224,28 @@ ggsave(file="./correlation_matrix.svg", plot=plot_cor_matrix, width=11, height=1
 
 ## What Influences Happiness?
 
-In this chapter we try to answer the question "What influences happiness?" by several methods of influential factors analysis. 
+In this chapter we try to answer the question "What influences happiness?" by several methods of influential factors analysis.
 
 ### Regression
 
-One tool for getting a first glance on what influences happiness is linear regression. For the regression we use the unscaled data. If our linear model has good predictability, we can interpret the coefficients on how they influence the outcome. This is also called regression analysis, where the goal is to isolate the relationship between each explanatory variable and the outcome variable.
+One tool for getting a first glance on what influences happiness is linear regression.
+For the regression we use the unscaled data.
+If our linear model has good predictability, we can interpret the coefficients on how they influence the outcome.
+This is also called regression analysis, where the goal is to isolate the relationship between each explanatory variable and the outcome variable.
 
-However, the interpretability assumes that you can only change the value of  one explanatory variable and not the others at the same time. This of course is only true if there are no correlations between the explanatory variables. If this independence does not hold, we have a problem of multicollinearity. This can result in the coefficients swingging wildly based on which other independent variables are in the model. Therefore the coefficients become very sensitive to small changes in the model and can not be easily interpreted.
+However, the interpretability assumes that you can only change the value of one explanatory variable and not the others at the same time.
+This of course is only true if there are no correlations between the explanatory variables.
+If this independence does not hold, we have a problem of multicollinearity.
+This can result in the coefficients swingging wildly based on which other independent variables are in the model.
+Therefore the coefficients become very sensitive to small changes in the model and can not be easily interpreted.
 
-One way to asses how strong the explanatory variables are affected by multicollinearity is using the variance inflation factor (VIF). VIFs identify correlations and their strength. VIFs between 1 and 5 suggest that there is a small correlation, VIFs greater than 5 represent critical levels of multicollinearity where the coefficients are poorly estimated. 
+One way to asses how strong the explanatory variables are affected by multicollinearity is using the variance inflation factor (VIF).
+VIFs identify correlations and their strength.
+VIFs between 1 and 5 suggest that there is a small correlation, VIFs greater than 5 represent critical levels of multicollinearity where the coefficients are poorly estimated.
 
-If we build a linear regression model on all explanatory variables, we get an **R-squared of 0.8063**. However, by plotting the VIF values we can see that a model based on all explanatory variables has severe multicollinearity. Therefore we can not interprete the coefficients for Internet, Health and Economy.
-
+If we build a linear regression model on all explanatory variables, we get an **R-squared of 0.8063**.
+However, by plotting the VIF values we can see that a model based on all explanatory variables has severe multicollinearity.
+Therefore we can not interprete the coefficients for Internet, Health and Economy.
 
 ```{r echo=FALSE, message=FALSE}
 
@@ -221,15 +259,16 @@ abline(v = 5, lwd = 3, lty = 2)
 
 ```
 
-If we build a linear regression model without Internet and Economy, we get an **R-squared of 0.7745**. This R-squared is lower than prior, but after plotting the VIF values we can see that we are allowed to interpret the coefficients for the remaining explanatory variables, as all VIF values are below 5.
+If we build a linear regression model without Internet and Economy, we get an **R-squared of 0.7745**.
+This R-squared is lower than prior, but after plotting the VIF values we can see that we are allowed to interpret the coefficients for the remaining explanatory variables, as all VIF values are below 5.
 
 Interesting is that only Social, Health, Corruption, Negative and Government are statistically significant:
 
-* Social has an positive effect on the Happiness Score. One unit change on Social results in an absolute Happiness increase of **4.646**
-* Health has an positive effect on the Happiness Score. One unit change on Health results in an absolute Happiness increase of **0.05214**
-* Corruption has an negative effect on the Happiness Score. One unit change on Corruption results in an absolute Happiness decrease of **-1.616**
-* Negative has an positive effect on the Happiness Score. One unit change on Negative results in an absolute Happiness increase of **1.927**
-* Government has an negative effect on the Happiness Score. One unit change on Government results in an absolute Happiness decrease of **-1.016**
+-   Social has an positive effect on the Happiness Score. One unit change on Social results in an absolute Happiness increase of **4.646**
+-   Health has an positive effect on the Happiness Score. One unit change on Health results in an absolute Happiness increase of **0.05214**
+-   Corruption has an negative effect on the Happiness Score. One unit change on Corruption results in an absolute Happiness decrease of **-1.616**
+-   Negative has an positive effect on the Happiness Score. One unit change on Negative results in an absolute Happiness increase of **1.927**
+-   Government has an negative effect on the Happiness Score. One unit change on Government results in an absolute Happiness decrease of **-1.016**
 
 ```{r echo=FALSE, message=FALSE}
 lm2 <- lm(Happiness ~ . -Internet -Economy, data = not_scaled_data_factors)
@@ -241,9 +280,12 @@ abline(v = 5, lwd = 3, lty = 2)
 
 ```
 
-
-
-Next we tried out a linear regrssion method with shrinkage. For the lasso regression some estimates can become exactly zero. The result is therfore a type of variable selection and makes the model sparse and easier to interpret. For Lasso regression all predictor variables should be scaled so that they have the same standard deviation. Otherwise, the predictor variables have weighting in the penalty term. The glmnet() function however standardizes the predictors by default and the output coefficients are recalculated to apply to the original scale.
+Next we tried out a linear regrssion method with shrinkage.
+For the lasso regression some estimates can become exactly zero.
+The result is therfore a type of variable selection and makes the model sparse and easier to interpret.
+For Lasso regression all predictor variables should be scaled so that they have the same standard deviation.
+Otherwise, the predictor variables have weighting in the penalty term.
+The glmnet() function however standardizes the predictors by default and the output coefficients are recalculated to apply to the original scale.
 
 ```{r echo=FALSE, message=FALSE}
 "Lasso Regression"
@@ -253,12 +295,13 @@ lasso.out <- cv.glmnet(x,y, alpha = 1)
 coef(lasso.out)
 ```
 
-The results of the lasso regression confirm our results from the normal regression for Social, Health and Corruption. However Positive is added and  Negative and Government is removed from the model.
+The results of the lasso regression confirm our results from the normal regression for Social, Health and Corruption.
+However Positive is added and Negative and Government is removed from the model.
 
-* Social.support: 3.35096335
-* Health: 0.04886770
-* Corruption: -0.68012247
-* Positive.affect: 0.22545789
+-   Social.support: 3.35096335
+-   Health: 0.04886770
+-   Corruption: -0.68012247
+-   Positive.affect: 0.22545789
 
 The change in the significant factors between the linear regression and lasso regression can be seen below:
 
@@ -308,33 +351,55 @@ ggsave(file="./significant_factors.svg", plot=plot_significant_factors, width=10
 
 ```
 
-The lasso and the linear regression model agree on the significant factors: Social, Health and Corruption. 
+The lasso and the linear regression model agree on the significant factors: Social, Health and Corruption.
 It seems plausible, that a high value in Social (answer to the questions: "If you were in trouble, do you have relatives or friends you can count on to help you whenever you need them, or not?") comes with high values of Happiness.
-The same for Health, even though the coefficients are not as big. Health captures the "Healthy life expectancy at birth from WHO" and therefore is foundation for Happiness. High values on Corruption on the other hand results in an Happiness decrease. Which is also plausible as an unfair environment, either in business or in government, results in an overall decrease in happiness.  
+The same for Health, even though the coefficients are not as big.
+Health captures the "Healthy life expectancy at birth from WHO" and therefore is foundation for Happiness.
+High values on Corruption on the other hand results in an Happiness decrease.
+Which is also plausible as an unfair environment, either in business or in government, results in an overall decrease in happiness.
 
 ### PCA and Biplot
 
-Principal component analysis is based on the assumption that, in the case of strongly correlated variables, there is a third variable which cannot be measured directly and which stands behind these correlated variables and, as it were, manifests itself in them. This means that the measurable variables are just another manifestation of variables that are in the background and cannot be measured directly. These background variables are called principal components. The aim of principal component analysis is to identify such background variables or factors from the measured data and to explain the observed relationships as completely as possible. 
+Principal component analysis is based on the assumption that, in the case of strongly correlated variables, there is a third variable which cannot be measured directly and which stands behind these correlated variables and, as it were, manifests itself in them.
+This means that the measurable variables are just another manifestation of variables that are in the background and cannot be measured directly.
+These background variables are called principal components.
+The aim of principal component analysis is to identify such background variables or factors from the measured data and to explain the observed relationships as completely as possible.
 
-For the PCA we are using the scaled factors without the happiness score. The first two PCs explain 59.01 % of the variation together.
+For the PCA we are using the scaled factors without the happiness score.
+The first two PCs explain 59.01 % of the variation together.
 
 PC1 explains 39.07 % of the variation and the coefficients are the following:
 
- $$PC1=-0.415*Economy+-0.397*Social+-0.395*Health+-0.174*Freedom+0.192*Corruption \\
+$$PC1=-0.415*Economy+-0.397*Social+-0.395*Health+-0.174*Freedom+0.192*Corruption \\
  +0.115*Generosity+-0.182*Positive+0.317*Negative+0.132*Government+-0.289*Alcohol \\
  +0.069*Population+-0.164*Tobacco+-0.411*Internet$$
 
 PC2 explains 19.94% of the variation and the coefficients are the following:
- 
-  $$PC2=0.059*Economy+0.014*Social+0.054*Health+-0.478*Freedom+0.388*Corruption \\
+
+$$PC2=0.059*Economy+0.014*Social+0.054*Health+-0.478*Freedom+0.388*Corruption \\
   +-0.396*Generosity+-0.384*Positive+0.108*Negative+-0.467*Government+0.054*Alcohol \\
   +-0.078*Population+0.246*Tobacco+0.103*Internet$$
 
-The PCA plot colored by the rounded happiness scores, clusters the countries quite good. The added ellipses give a quick visual idea in which area which happiness levels are located. 
-For low values on PC1 and PC2 we the really high happiness scores. The top 3 countries for 2018 (Finland, Denmark and Switzerland) are all in that region.
-Also interesting is that most of the countries in the lower left are from 'Western Europe', expect of 'New Zealand', 'Australia' and 'Canada' with are from 'North America and ANZ'. We follow up on this finding in chapter "What further influences happiness?". 
+The PCA plot colored by the rounded happiness scores, clusters the countries quite good.
+The added ellipses give a quick visual idea in which area which happiness levels are located.
+For low values on PC1 and PC2 we the really high happiness scores.
+The top 3 countries for 2018 (Finland, Denmark and Switzerland) are all in that region.
+Also interesting is that most of the countries in the lower left are from 'Western Europe', expect of 'New Zealand', 'Australia' and 'Canada' with are from 'North America and ANZ'.
+We follow up on this finding in chapter "What further influences happiness?".
 
-When we move from left to right, the happiness scores decrease. The values 8,7,6,5,4 are quite good separated. Therefore PC1 captures the overall Happiness. However the separation between happiness scores is not exact. Happiness scores 8 and 7 are quite good seperated as the happiness scores 8 are quite close together. Happiness scores 7 and 6 overlapping about 50%, but a separation is still recognizable. Happiness score 6 has two outliers. UZB (Uzbekistan) and BEN(Benin), that is why the ellipse results in this big area. Happiness score 5 has no big outliers, but the overlap between 5 and 6 is even bigger than between 6 and 7.  Happiness scores 5 and 4 overlapping again about 50%, therefore a separation is visible. Happiness score 3 however is only consisting out of 3 points and is not good seperated. Happiness score 3 has crossovers with 4,5 and 6. PC1 can therefore separate happier countries better than unhappier ones.  
+When we move from left to right, the happiness scores decrease.
+The values 8,7,6,5,4 are quite good separated.
+Therefore PC1 captures the overall Happiness.
+However the separation between happiness scores is not exact.
+Happiness scores 8 and 7 are quite good seperated as the happiness scores 8 are quite close together.
+Happiness scores 7 and 6 overlapping about 50%, but a separation is still recognizable.
+Happiness score 6 has two outliers.
+UZB (Uzbekistan) and BEN(Benin), that is why the ellipse results in this big area.
+Happiness score 5 has no big outliers, but the overlap between 5 and 6 is even bigger than between 6 and 7.
+Happiness scores 5 and 4 overlapping again about 50%, therefore a separation is visible.
+Happiness score 3 however is only consisting out of 3 points and is not good seperated.
+Happiness score 3 has crossovers with 4,5 and 6.
+PC1 can therefore separate happier countries better than unhappier ones.
 
 ```{r echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE}
 
@@ -378,7 +443,6 @@ pca_plot <- ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=co
 pca_plot
 ```
 
- 
 After plotting the two outliers, UZB (Uzbekistan) and BEN(Benin), within their happiness group 6, we still can see that they are outliers in a lot of categories compared to the outer countries in happiness class 6.
 
 ```{r echo=FALSE, fig.height=5, fig.width=10, message=FALSE, warning=FALSE}
@@ -405,10 +469,13 @@ data_6 %>% select("Happiness","Economy","Social","Health","Freedom","Corruption"
 
 Next on we looked at the biplot where we can see how the original variables correlate with the principal components.
 
-For PC1 we have some strong  correlations for: Internet, Economy, Health and Social. Alcohol is as well correlated with PC1, but not as strong.
+For PC1 we have some strong correlations for: Internet, Economy, Health and Social.
+Alcohol is as well correlated with PC1, but not as strong.
 Negative is also correlated with PC1, it matches quit good, that high values in Negative results in lower happiness.
 
-For PC2 the strongest correlations are: Positive, Freedom, Generosity, Government and Corruption. The PC2 therefore splits quite good between (Positive, Freedom) and (Corruption). We can also see that visually as the 'Western Europe' countries are on the side of (Positive, Freedom). 
+For PC2 the strongest correlations are: Positive, Freedom, Generosity, Government and Corruption.
+The PC2 therefore splits quite good between (Positive, Freedom) and (Corruption).
+We can also see that visually as the 'Western Europe' countries are on the side of (Positive, Freedom).
 
 ```{r echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE}
 
@@ -435,10 +502,13 @@ biplot
 
 ```
 
-
 ### SOM
 
-Nextup, we build the self-organizing map. The results in the SOM mapping match out results from the PCA perfectly. We have the same distribution of the happiness categories (8-3). Via the codes plot we can also further confirm our results as the happiest countries (lower left) have the highest values in Internet, Economy, Social, Health and Freedom, an the lowest values for Corruption. For the unhappiest countries it is the other way round.
+Nextup, we build the self-organizing map.
+The results in the SOM mapping match out results from the PCA perfectly.
+We have the same distribution of the happiness categories (8-3).
+Via the codes plot we can also further confirm our results as the happiest countries (lower left) have the highest values in Internet, Economy, Social, Health and Freedom, an the lowest values for Corruption.
+For the unhappiest countries it is the other way round.
 
 ```{r eval=FALSE, echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE,fig.show='hide'}
 som_2018 <- scaled_data_factors[,correlation_categories_without_happy]
@@ -472,13 +542,16 @@ text( som2pts(happy_SOM_model)[,1]+ runif(95)*0.5-0.25, som2pts(happy_SOM_model)
 
 ```
 
-SOMs 
+SOMs
 
 ![SOM](./figs/SOM_scal_svg.svg)
 
 ### What further influences happiness?
 
-Let us now pich up our finding from the pca regarding the grouping of the countries from 'Western Europe' and 'North America and ANZ' in the lower left (happy region) again. Below we plotted the happiness of the counties by region. We can see a clear difference between the happieness distributions for regions. 'Western Europe' and 'North America and ANZ' are the happiest regions, 'Sub-Saharan Africa' is the region with the unhappiest countries, but has quite a wide spread.
+Let us now pich up our finding from the pca regarding the grouping of the countries from 'Western Europe' and 'North America and ANZ' in the lower left (happy region) again.
+Below we plotted the happiness of the counties by region.
+We can see a clear difference between the happieness distributions for regions.
+'Western Europe' and 'North America and ANZ' are the happiest regions, 'Sub-Saharan Africa' is the region with the unhappiest countries, but has quite a wide spread.
 
 ```{r echo=FALSE, fig.height=7, fig.width=9, message=FALSE, warning=FALSE}
 col_palette <- viridis(11)[-1]
@@ -510,7 +583,7 @@ data("happiness", package = "zenplots")
 
 tobaccohappy <- left_join(as.data.frame(happiness), as.data.frame(happy[ ,c("Country","Tobacco")]), by = 'Country')
 
-tobaccohappy <- tobaccohappy[,-7]
+tobaccohappy <- tobaccohappy[1:166,-7]
 
 d <- highlight_key(tobaccohappy,
                    ~Region)
@@ -519,14 +592,20 @@ p <-ggplot(d, aes(x = Tobacco, y = Happiness, group = Region,
                   color = Region, text = Country)) + 
   labs(y= "Happiness Score", x = "Tobacco Consumption (%)", title = "Tobacco and Happiness") + 
   geom_smooth(aes(group = Region), method = "lm", se = FALSE, size = 0.5) + 
-  geom_point(aes(size = GDP)) +
+  geom_point(aes(size = (10^GDP))) +
   theme_bw() + 
   scale_color_manual(values = rainbow(10, alpha = 0.7)) +
-  scale_size_continuous(range = c(0, 10), name = '')
+  scale_size_continuous(range = c(2, 14), name = "")
 
 gg <- ggplotly(p, tooltip = "text") %>% 
   highlight(on = 'plotly_click', off = 'plotly_doubleclick', 
-            opacityDim = .05)
+            opacityDim = .05) %>% layout(title = list(text = paste0('Tobacco and Happiness',
+                                                                '<br>',
+                                                                '<sup>',
+                                                                '<i>',
+                                                                'Circle Size is proportional to GDP','</i>','</sup>')))
+
+
 
 # First, make the lines invisible (because no groups are highlighted)
 # Remove the line legend; add the point legend
@@ -549,7 +628,7 @@ gg %>% htmlwidgets::onRender(
   "function(el, x){
     v = [] /* establish outside of the events; used for both */
     for (i = 0; i < 22; i++) {  /*1st 11 are lines; 2nd 11 are points */
-      if(i < 12){
+      if(i < 11){
         v[i] = false;
       } else {
         v[i] = true;
@@ -570,16 +649,58 @@ gg %>% htmlwidgets::onRender(
         Plotly.restyle(el.id, update);
     });
   }")
+
+
 ```
 
+There were three datasets added to the original which pertained to alcohol consumption, internet usage, and tobacco consumption. In the preliminary analysis it is evident that (perhaps best illustrated in the biplot) that both alcohol consumption and internet use display strong colinearity with happiness. The role of tobacco consumption is less clear, however, and the interactive scatter plot perhaps shines more light on the situation. 
+
+Overall when all regions are highlighted, there is little connection between the happiness score and tobacco consumption. But if one examines by region, say Western Europe, there is a negative correlation between happiness and tobacco consumption. A similar situation is evident with the regions South-East Asia and USA/Canada/AND. The correlation is least clear with the region sub-Saharan Africa, where the line of best fit upon highlighting demonstrates little meaning.
+
+This is interesting and would be a suitable area for future work. Perhaps in regions where the level of happiness is already rather high, smoking could be viewed as a stand-in for the levels of stress experienced in a given country (smoking is, for example, strongly correlated with several mental illnesses). It is also very evident in the South-East Asian region that countries with large GDPs (Singapore) smoke a lot less than lower GDP countries (Myanmar). Perhaps education levels slso have some affect, as this would be correlated with GDP. I would also be interested in viewing the effects of taxation on cigarettes and their consumption levels; for example, in Ireland a packet costs almost €20, whereas in Germany a packet costs around €8, and as per the visualisation, the rate of smoking is lower in Ireland than Germany. 
 
 ## How does happiness change over time?
 
 # Animation
 
-![Alt Text](./figs/plot_gdpPercap_lifeExp.gif)
+```{r echo=FALSE, message=FALSE}
+library(gapminder)
+library(gganimate)
+library(gifski)
 
-geography map (color each country base on the percentage change over time (2015-2022))
+newdata <- read.csv2('https://raw.githubusercontent.com/Oliss4t/BHT_Vizsualisation_Project/main/data/preprocessed_data_happy_incl_region_no_nan.csv')
+
+
+p2 <- ggplot(newdata, aes(Health, Happiness, colour = Region)) +
+  geom_point(alpha = 0.9, show.legend = FALSE, size = 2) +
+  scale_colour_manual(values = rainbow(10)) +
+  theme(plot.title = element_text(size=20, face= "bold", colour= "black" ), strip.text = element_text(size=12)) +
+  theme_bw() +
+  scale_size(range = c(4)) +
+  facet_wrap(~Region, ncol = 5, nrow = 2) +
+  shadow_mark(alpha = 0.1, size = 1) +
+  # Animating the plot
+  labs(title = 'Happiness in {as.integer(frame_time)}', x = 'Health', y = 'Happiness') +
+  transition_time(as.integer(Year) + 2014) +
+  ease_aes('linear')
+
+#animate(p2, width=1600, height=800, end_pause = 20, fps = 13, nframes = 130)
+
+#anim_save('happy.gif')
+
+```
+![Alt Text](./figs/happy.gif)
+
+The above animation shows the change in happiness by region plotted against time over 2015-2022. The most notable thing about this visualization is the near universal drop in the health score in the year 2020, presumably owing to the Coronavirus Pandemic. It is reasonable that such a drop would be visible on this graph as the 'health' variable is so heavily dependent on life expectancy. If one looks closely, there are some countries which remain static, for example in South-East Asia, which could be examples of countries which implemented successful zero-Covid policies. Note that the health scores soon recover in the following years, possibly owing to the availability of vaccines. Note that some regions, pre-pandemic (namely Sub-Saharan Africa), exhibit a lot of year-to-year movement in terms of the health-axis, which could point to lack of access to adequate health services in this region, as well as susceptibility to endemic diseases such as malaria which are not as present in other regions.
+
+Finally, Central and Eastern Europe is the region which seems to exhibit the most upward trending change in terms of happiness over the period of time, with most regions as a while quite stagnant, even though individual countries can display much movement. However, the reader is invited to make up their own mind on such trends as it is not completely clear just from this visualisation and would also require some quantative analysis to confirm the hypothesis.
+
+# Map of Happiness Change
+
+![Alt Text](./figs/Map.png)
+
+The above image gives a quick overview on how happiness has changed over the world. At a glance, it seems as if much of the world is less happy in 2022 than in 2015. There are some cases where it is obvious why this may have happened: economic collapse and associated problems in Venezuela, or the return of the Taliban to power in Afghanistan. Note that many of the note available countries such as Syria are suffering from war, and of course this would lead to a lower happiness score anyway. Likewise, the brutal authoritarian regime of North Korea is also unlikely to lead to happy citizens. On a region by region basis, West Africa and Eastern Europe seem to have had the best improvement in this time. Note that countries with lower happiness in 2015 have more room to improve and one must be careful not to interpret it as meaning this countries are exceptionally. As a counter example, Australia and New Zealand have both decreased in happiness in these 7 years, but still rank amongst the most happy nations nonetheless. The reader is invited to use the interactive version below to further examine country-by-country change along with the change in the variables from the happiness reports.
+
 
 ```{r echo=FALSE, message=FALSE}
 library(knitr)
@@ -587,7 +708,6 @@ library(plotly)
 library(ggplot2)
 library(dplyr)
 library(corrplot)
-
 
 map.world <- map_data("world")
 
@@ -641,16 +761,15 @@ map.world1 <- left_join(map.world, df.change, by = c('region' = 'country'))
 
 
 #Diverging Color Palette 
-
-
-###install.packages("devtools")    
-### devtools::install_github("kwstat/pals")   
+ 
 library(pals)
+
 coolwarm_hcl <- colorspace::diverging_hcl(100,
                                           h = c(250, 10), c = 100, l = c(37, 88), power = c(0.7, 1.7))
-ggplotchange <- ggplot(data = map.world1, aes(x = long, y = lat, group = group, fill = happiness, text  = paste("Country:", region, "<br>", "Happiness:", -happiness, "<br>", "Economy:", economy, "<br>", "Family:", family, "<br>", "Health:", -health, "<br>", "Freedom:", -freedom, "<br>", "Trust:", trust, "<br>", "Generosity:", generosity))) +
-  geom_polygon() +
-  scale_fill_gradientn(colors = ocean.curl(150)) +
+ggplotchange <- ggplot(data = map.world1, aes(x = long, y = lat, group = group, fill = happiness, text  = paste("Country:", region, "<br>", "Happiness:", -happiness, "<br>", "Economy:", -economy, "<br>", "Family:", -family, "<br>", "Health:", -health, "<br>", "Freedom:", -freedom, "<br>", "Trust:", -trust, "<br>", "Generosity:", -generosity))) +
+  geom_polygon(aes(colour = "")) +
+  scale_fill_gradientn(colors = ocean.curl(150), breaks=c(-1, -0.2, 1), labels=c("More Happy","No Change","Less Happy")) +
+  scale_colour_manual(values="Grey", labels=c("Data Unavailable")) +
   theme(
     panel.grid = element_blank(),
     axis.text = element_blank(),
@@ -658,13 +777,25 @@ ggplotchange <- ggplot(data = map.world1, aes(x = long, y = lat, group = group, 
     axis.ticks = element_blank(),
     legend.title = element_blank(),
     plot.title = element_text(hjust = 0.5)) +
-  labs(title = "Change from 2015 to 2022") +
-  guides(fill = guide_legend(title=NULL))
-ggplotly(ggplotchange, tooltip = c("text"))
+  labs(title = "Change in Happiness from 2015 to 2022") +
+  guides(fill = guide_legend(title=""), colour=guide_legend("No data", override.aes=list(colour="Blue")))
+
+forplotly <- ggplot(data = map.world1, aes(x = long, y = lat, group = group, fill = happiness, text  = paste("Country:", region, "<br>", "Happiness:", -happiness, "<br>", "Economy:", -economy, "<br>", "Family:", -family, "<br>", "Health:", -health, "<br>", "Freedom:", -freedom, "<br>", "Trust:", -trust, "<br>", "Generosity:", -generosity))) +
+  geom_polygon() +
+  scale_fill_gradientn(colors = ocean.curl(150), breaks=c(-1, -0.2, 1), labels=c("More Happy","No Change","Less Happy")) +
+  theme(
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_blank(),
+    plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Change in Happiness from 2015 to 2022") +
+  guides(fill = guide_legend(title=""))
+
+
+ggplotly(forplotly, tooltip = c("text")) 
 
 ```
-
-
-
 
 ## Future work
