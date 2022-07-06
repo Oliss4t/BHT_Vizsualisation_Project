@@ -23,7 +23,7 @@ library(ggpubr)
 
 We joined our initial Happiness dataset with internet usage, alcohol consumption, and tobacco consumption. According to my colleague's analysis, both internet usage and alcohol consumption were strongly and somewhat positively correlated to Happiness. This link was not as clear with Tobacco consumption and Happiness. Thus my main motivation for my initial visualisations was as an exploratory tool. My first plot of Happiness versus Tobacco consumption looked as follows:
 
-```{r echo=FALSE, message=FALSE}
+```{r echo=TRUE, message=FALSE}
 happy <- read.csv('https://raw.githubusercontent.com/Oliss4t/BHT_Vizsualisation_Project/main/data/preprocessed_data_2018_no_nan.csv')
 
 p <- ggplot(happy, aes(x=Tobacco, y=Happiness)) +
@@ -35,7 +35,7 @@ p
 
 This is, of course, a terribly uninteresting plot, and a qualitative, superficial glance would say that this resemples noise. But in the process of making it look 'prettier' by adding colour by region, a more interesting picture emerges:
 
-```{r echo=FALSE, message=FALSE}
+```{r echo=TRUE, message=FALSE}
 
 p <- ggplot(happy, aes(x=Tobacco, y=Happiness, color = Region)) +
   labs(y = "Happiness Score", x = "Tobacco Consumption (%)", title="Tobacco and Happiness") +
@@ -48,13 +48,13 @@ p
 
 ```
 
-In the above figure, there seems to be more of a discernible pattern by region, which piqued my interest. Here there is a note on colour usage. I initially used the default Viridis colour palette, but found it difficult to differentiate for the 10 categories (regions). I myself have some degree of red-green colour blindness, and the default Viridis colour palette is recommended for colour blind people; but I actually found the rainbow palette easier to distinguish, hence I stick with that. Also, I've made the background black and white to make things clearer while also keeping the grid.
+In the above figure, there seems to be more of a discernible pattern by region, which piqued my interest. Here, there is a note on colour usage. I initially used the default Viridis colour palette, but found it difficult to differentiate for the 10 categories (regions). I myself have some degree of red-green colour blindness, and the default Viridis colour palette is recommended for colour blind people; however, I actually found the rainbow palette easier to distinguish, hence I stick with that. Also, I've made the background black and white to make things clearer while also keeping the grid. Alpha is set to 0.7 so that the points are somewhat translucent and can overlap.
 
-In the next iteration of the plot I decided to use geom_smooth() to append a linear regression line of best fit to each region. Also I have scaled the point size according GDP to try see more information. Note that in the data, the log of GDP is the unit provide, so I've transformed the GDP so that the size is more appropriately scaled.
+In the next iteration of the plot I decided to use geom_smooth() to append a linear regression line of best fit to each region. Also I have scaled the point size according GDP to try see more information. Note that in the data, the log of GDP is the unit provided, so I've transformed the GDP so that the size is more appropriately scaled. Upon highlighting a given region, opacityDim is set to .05, rendering the non-selected points almost invisible.
 
 (Note, there is a small amount of data cleansing here owing to the fact we had to alter our data in the course of the project)
 
-```{r echo=FALSE, message=FALSE}
+```{r echo=TRUE, message=FALSE}
 
 happy <- read.csv('https://raw.githubusercontent.com/Oliss4t/BHT_Vizsualisation_Project/main/data/preprocessed_data_2018_no_nan.csv')
 
@@ -90,13 +90,14 @@ gg
 
 
 
-This is messy, but one can now see that when clicking on the data, that there is a negative correlation between tobacco consumption and happiness in some regions. The reader is encouraged to play around with the plotly object here. Country names should appear on hover. My main criticism at this point was that it is too crowded, so I decided to try get rid of the regression lines and only have them appear only on clicking. Plotly can be manipulated using JS, which I grappled with and eventually got to work. The code can be viewed below:
+This is messy, but one can now see that when clicking on the data, there is a negative correlation between tobacco consumption and happiness in some regions. The reader is encouraged to play around with the plotly object here. Country names should appear on hover. My main criticism at this point was that it is too crowded, so I decided to try get rid of the regression lines and only have them appear only on clicking. Plotly can be manipulated using JS, which I grappled with and eventually got to work. The code can be viewed below:
 
 
-```{r echo=FALSE, message=FALSE}
+```{r echo=TRUE, message=FALSE}
 
 # First, make the lines invisible for when no groups are highlighted
 # Remove the line legend and add the point legend
+# Can use if/else as either it is lines, or just the points which we want to include
 invisible(
   lapply(1:length(gg$x$data),
          function(j){
@@ -138,4 +139,18 @@ gg %>% htmlwidgets::onRender(
     });
   }")
 ```
+
+
+Overall when all regions are highlighted, there is little connection between the happiness score and tobacco consumption.
+But if one examines by region, say Western Europe, there is a negative correlation between happiness and tobacco consumption.
+A similar situation is evident with the regions South-East Asia and USA/Canada/AND.
+The correlation is least clear with the region sub-Saharan Africa, where the line of best fit upon highlighting demonstrates little meaning.
+
+This is interesting and would be a suitable area for future work.
+Perhaps in regions where the level of happiness is already rather high, smoking could be viewed as a stand-in for the levels of stress experienced in a given country (smoking is, for example, strongly correlated with several mental illnesses).
+It is also very evident in the South-East Asian region that countries with large GDPs (Singapore) smoke a lot less than lower GDP countries (Myanmar).
+
+Perhaps education levels slso have some affect, as this would be correlated with GDP.
+
+I would also be interested in viewing the effects of taxation on cigarettes and their consumption levels; for example, in Ireland a packet costs almost €20, whereas in Germany a packet costs around €8, and as per the visualisation, the rate of smoking is lower in Ireland than Germany.
 
