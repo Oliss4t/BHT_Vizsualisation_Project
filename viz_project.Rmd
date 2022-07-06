@@ -653,11 +653,20 @@ gg %>% htmlwidgets::onRender(
 
 ```
 
-There were three datasets added to the original which pertained to alcohol consumption, internet usage, and tobacco consumption. In the preliminary analysis it is evident that (perhaps best illustrated in the biplot) that both alcohol consumption and internet use display strong colinearity with happiness. The role of tobacco consumption is less clear, however, and the interactive scatter plot perhaps shines more light on the situation. 
+There were three datasets added to the original which pertained to alcohol consumption, internet usage, and tobacco consumption.
+In the preliminary analysis it is evident that (perhaps best illustrated in the biplot) that both alcohol consumption and internet use display strong colinearity with happiness.
+The role of tobacco consumption is less clear, however, and the interactive scatter plot perhaps shines more light on the situation.
 
-Overall when all regions are highlighted, there is little connection between the happiness score and tobacco consumption. But if one examines by region, say Western Europe, there is a negative correlation between happiness and tobacco consumption. A similar situation is evident with the regions South-East Asia and USA/Canada/AND. The correlation is least clear with the region sub-Saharan Africa, where the line of best fit upon highlighting demonstrates little meaning.
+Overall when all regions are highlighted, there is little connection between the happiness score and tobacco consumption.
+But if one examines by region, say Western Europe, there is a negative correlation between happiness and tobacco consumption.
+A similar situation is evident with the regions South-East Asia and USA/Canada/AND.
+The correlation is least clear with the region sub-Saharan Africa, where the line of best fit upon highlighting demonstrates little meaning.
 
-This is interesting and would be a suitable area for future work. Perhaps in regions where the level of happiness is already rather high, smoking could be viewed as a stand-in for the levels of stress experienced in a given country (smoking is, for example, strongly correlated with several mental illnesses). It is also very evident in the South-East Asian region that countries with large GDPs (Singapore) smoke a lot less than lower GDP countries (Myanmar). Perhaps education levels slso have some affect, as this would be correlated with GDP. I would also be interested in viewing the effects of taxation on cigarettes and their consumption levels; for example, in Ireland a packet costs almost €20, whereas in Germany a packet costs around €8, and as per the visualisation, the rate of smoking is lower in Ireland than Germany. 
+This is interesting and would be a suitable area for future work.
+Perhaps in regions where the level of happiness is already rather high, smoking could be viewed as a stand-in for the levels of stress experienced in a given country (smoking is, for example, strongly correlated with several mental illnesses).
+It is also very evident in the South-East Asian region that countries with large GDPs (Singapore) smoke a lot less than lower GDP countries (Myanmar).
+Perhaps education levels slso have some affect, as this would be correlated with GDP.
+I would also be interested in viewing the effects of taxation on cigarettes and their consumption levels; for example, in Ireland a packet costs almost €20, whereas in Germany a packet costs around €8, and as per the visualisation, the rate of smoking is lower in Ireland than Germany.
 
 ## How does happiness change over time?
 
@@ -689,18 +698,32 @@ p2 <- ggplot(newdata, aes(Health, Happiness, colour = Region)) +
 #anim_save('happy.gif')
 
 ```
+
 ![Alt Text](./figs/happy.gif)
 
-The above animation shows the change in happiness by region plotted against time over 2015-2022. The most notable thing about this visualization is the near universal drop in the health score in the year 2020, presumably owing to the Coronavirus Pandemic. It is reasonable that such a drop would be visible on this graph as the 'health' variable is so heavily dependent on life expectancy. If one looks closely, there are some countries which remain static, for example in South-East Asia, which could be examples of countries which implemented successful zero-Covid policies. Note that the health scores soon recover in the following years, possibly owing to the availability of vaccines. Note that some regions, pre-pandemic (namely Sub-Saharan Africa), exhibit a lot of year-to-year movement in terms of the health-axis, which could point to lack of access to adequate health services in this region, as well as susceptibility to endemic diseases such as malaria which are not as present in other regions.
+The above animation shows the change in happiness by region plotted against time over 2015-2022.
+The most notable thing about this visualization is the near universal drop in the health score in the year 2020, presumably owing to the Coronavirus Pandemic.
+It is reasonable that such a drop would be visible on this graph as the 'health' variable is so heavily dependent on life expectancy.
+If one looks closely, there are some countries which remain static, for example in South-East Asia, which could be examples of countries which implemented successful zero-Covid policies.
+Note that the health scores soon recover in the following years, possibly owing to the availability of vaccines.
+Note that some regions, pre-pandemic (namely Sub-Saharan Africa), exhibit a lot of year-to-year movement in terms of the health-axis, which could point to lack of access to adequate health services in this region, as well as susceptibility to endemic diseases such as malaria which are not as present in other regions.
 
-Finally, Central and Eastern Europe is the region which seems to exhibit the most upward trending change in terms of happiness over the period of time, with most regions as a while quite stagnant, even though individual countries can display much movement. However, the reader is invited to make up their own mind on such trends as it is not completely clear just from this visualisation and would also require some quantative analysis to confirm the hypothesis.
+Finally, Central and Eastern Europe is the region which seems to exhibit the most upward trending change in terms of happiness over the period of time, with most regions as a while quite stagnant, even though individual countries can display much movement.
+However, the reader is invited to make up their own mind on such trends as it is not completely clear just from this visualisation and would also require some quantative analysis to confirm the hypothesis.
 
 # Map of Happiness Change
 
 ![Alt Text](./figs/Map.png)
 
-The above image gives a quick overview on how happiness has changed over the world. At a glance, it seems as if much of the world is less happy in 2022 than in 2015. There are some cases where it is obvious why this may have happened: economic collapse and associated problems in Venezuela, or the return of the Taliban to power in Afghanistan. Note that many of the note available countries such as Syria are suffering from war, and of course this would lead to a lower happiness score anyway. Likewise, the brutal authoritarian regime of North Korea is also unlikely to lead to happy citizens. On a region by region basis, West Africa and Eastern Europe seem to have had the best improvement in this time. Note that countries with lower happiness in 2015 have more room to improve and one must be careful not to interpret it as meaning this countries are exceptionally. As a counter example, Australia and New Zealand have both decreased in happiness in these 7 years, but still rank amongst the most happy nations nonetheless. The reader is invited to use the interactive version below to further examine country-by-country change along with the change in the variables from the happiness reports.
-
+The above image gives a quick overview on how happiness has changed over the world.
+At a glance, it seems as if much of the world is less happy in 2022 than in 2015.
+There are some cases where it is obvious why this may have happened: economic collapse and associated problems in Venezuela, or the return of the Taliban to power in Afghanistan.
+Note that many of the note available countries such as Syria are suffering from war, and of course this would lead to a lower happiness score anyway.
+Likewise, the brutal authoritarian regime of North Korea is also unlikely to lead to happy citizens.
+On a region by region basis, West Africa and Eastern Europe seem to have had the best improvement in this time.
+Note that countries with lower happiness in 2015 have more room to improve and one must be careful not to interpret it as meaning this countries are exceptionally.
+As a counter example, Australia and New Zealand have both decreased in happiness in these 7 years, but still rank amongst the most happy nations nonetheless.
+The reader is invited to use the interactive version below to further examine country-by-country change along with the change in the variables from the happiness reports.
 
 ```{r echo=FALSE, message=FALSE}
 library(knitr)
@@ -798,4 +821,15 @@ ggplotly(forplotly, tooltip = c("text"))
 
 ```
 
-## Future work
+## Future work and Conclussions
+
+While we believe the end result of the project was good, there are lessons to be learned with regard to how we construct the visualizations.
+We began plotting the graphs before properly understanding the nature of the Happiness dataset, which resulted in us having wasted some time and having to repeat processes of pre-processing and analysis, as well as the plots themselves.
+
+Overall, it was found that Happiness is strongly related to common sense things: family, health, economic success; and negatively related to things like corruption.
+The analysis revealed an interesting negative correlation between tobacco consumption and happiness, but only on a regional basis.
+This would merit further analysis on the exact factors affect tobacco consumption in a country.
+
+Clearly, as per the animation, the Pandemic had an effect on health outcomes, yet interestingly the relevant years do not seem to have a large effect on overall happiness.
+The map visualization allows us to see that, at a glance, happiness seems to have decreased in the majority of countries.
+However, Happiness has increased in Central Europe, West Africa, and a small segment of Central America in particular.
