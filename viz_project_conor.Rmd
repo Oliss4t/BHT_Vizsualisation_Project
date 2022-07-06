@@ -1,0 +1,141 @@
+---
+title: Vizualization on the Happines Dataset including Tabacco, Alcohole and Internet
+  consumption - Focus on Tobacco and Happiness Visualisation
+author: "Conor Fallon"
+date: "01 7 2022"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(ggplot2)
+library(viridis)
+library(tidyverse)
+library(plotly)
+library(ggpubr)
+
+```
+
+## Why Tobacco and Happiness?
+
+We joined our initial Happiness dataset with internet usage, alcohol consumption, and tobacco consumption. According to my colleague's analysis, both internet usage and alcohol consumption were strongly and somewhat positively correlated to Happiness. This link was not as clear with Tobacco consumption and Happiness. Thus my main motivation for my initial visualisations was as an exploratory tool. My first plot of Happiness versus Tobacco consumption looked as follows:
+
+```{r echo=FALSE, message=FALSE}
+happy <- read.csv('https://raw.githubusercontent.com/Oliss4t/BHT_Vizsualisation_Project/main/data/preprocessed_data_2018_no_nan.csv')
+
+p <- ggplot(happy, aes(x=Tobacco, y=Happiness)) +
+  geom_point()
+
+p
+
+```
+
+This is, of course, a terribly uninteresting plot, and a qualitative, superficial glance would say that this resemples noise. But in the process of making it look 'prettier' by adding colour by region, a more interesting picture emerges:
+
+```{r echo=FALSE, message=FALSE}
+
+p <- ggplot(happy, aes(x=Tobacco, y=Happiness, color = Region)) +
+  labs(y = "Happiness Score", x = "Tobacco Consumption (%)", title="Tobacco and Happiness") +
+  geom_point() +
+  theme_bw() + 
+  scale_color_manual(values = rainbow(10, alpha = 0.7)) +
+  scale_size_continuous(range = c(2, 14), name = "")
+
+p 
+
+```
+
+In the above figure, there seems to be more of a discernible pattern by region, which piqued my interest. Here there is a note on colour usage. I initially used the default Viridis colour palette, but found it difficult to differentiate for the 10 categories (regions). I myself have some degree of red-green colour blindness, and the default Viridis colour palette is recommended for colour blind people; but I actually found the rainbow palette easier to distinguish, hence I stick with that. Also, I've made the background black and white to make things clearer while also keeping the grid.
+
+In the next iteration of the plot I decided to use geom_smooth() to append a linear regression line of best fit to each region. Also I have scaled the point size according GDP to try see more information. Note that in the data, the log of GDP is the unit provide, so I've transformed the GDP so that the size is more appropriately scaled.
+
+(Note, there is a small amount of data cleansing here owing to the fact we had to alter our data in the course of the project)
+
+```{r echo=FALSE, message=FALSE}
+
+happy <- read.csv('https://raw.githubusercontent.com/Oliss4t/BHT_Vizsualisation_Project/main/data/preprocessed_data_2018_no_nan.csv')
+
+data("happiness", package = "zenplots")
+
+tobaccohappy <- left_join(as.data.frame(happiness), as.data.frame(happy[ ,c("Country","Tobacco")]), by = 'Country')
+
+tobaccohappy <- tobaccohappy[1:166,-7]
+
+d <- highlight_key(tobaccohappy,
+                   ~Region)
+
+p <-ggplot(d, aes(x = Tobacco, y = Happiness, group = Region, 
+                  color = Region, text = Country)) + 
+  labs(y= "Happiness Score", x = "Tobacco Consumption (%)", title = "Tobacco and Happiness") + 
+  geom_smooth(aes(group = Region), method = "lm", se = FALSE, size = 0.5) + 
+  geom_point(aes(size = (10^GDP))) +
+  theme_bw() + 
+  scale_color_manual(values = rainbow(10, alpha = 0.7)) +
+  scale_size_continuous(range = c(2, 14), name = "")
+
+gg <- ggplotly(p, tooltip = "text") %>% 
+  highlight(on = 'plotly_click', off = 'plotly_doubleclick', 
+            opacityDim = .05) %>% layout(title = list(text = paste0('Tobacco and Happiness',
+                                                                '<br>',
+                                                                '<sup>',
+                                                                '<i>',
+                                                                'Circle Size is proportional to GDP','</i>','</sup>')))
+
+gg
+
+```
+
+
+
+This is messy, but one can now see that when clicking on the data, that there is a negative correlation between tobacco consumption and happiness in some regions. The reader is encouraged to play around with the plotly object here. Country names should appear on hover. My main criticism at this point was that it is too crowded, so I decided to try get rid of the regression lines and only have them appear only on clicking. Plotly can be manipulated using JS, which I grappled with and eventually got to work. The code can be viewed below:
+
+
+```{r echo=FALSE, message=FALSE}
+
+# First, make the lines invisible for when no groups are highlighted
+# Remove the line legend and add the point legend
+invisible(
+  lapply(1:length(gg$x$data),
+         function(j){
+           nm <- gg$x$data[[j]]$name
+           md <- gg$x$data[[j]]$mode
+           if(md == "lines") {
+             gg$x$data[[j]]$visible <<- FALSE
+             gg$x$data[[j]]$showlegend <<- FALSE
+           } else {
+             gg$x$data[[j]]$visible <<- TRUE
+             gg$x$data[[j]]$showlegend <<- TRUE
+           }
+         }
+  ))
+
+gg %>% htmlwidgets::onRender(
+  "function(el, x){
+    v = [] 
+    for (i = 0; i < 22; i++) {  /*1st 11 are lines; 2nd 11 are points */
+      if(i < 11){
+        v[i] = false;
+      } else {
+        v[i] = true;
+      }
+    }
+    console.log(x);
+    el.on('plotly_click', function(d) {
+      cn = d.points[0].curveNumber - 10;  /*if [8] is the lines, [18] is the points*/
+      v2 = JSON.parse(JSON.stringify(v)); /*create a deep copy*/
+      v2[cn] = true;
+      update = {visible: v2};
+      Plotly.restyle(el.id, update); /* in case 1 click to diff highlight */
+    });
+    el.on('plotly_doubleclick', function(d) {
+        console.log('out ', d);
+        update = {visible: v}
+        console.log('dbl click ' + v);
+        Plotly.restyle(el.id, update);
+    });
+  }")
+```
+
