@@ -1,82 +1,171 @@
 ---
-title: Vizualization on the Happines Dataset including Tabacco, Alcohole and Internet
-  consumption, detailed explanation of specific vizualisations
+title: Vizualization on the Happines Dataset including Tabacco, Alcohole and Internet consumption
+subtitle: Design choices for the PCA-Plot and Biplot
 author: "Tassilo Henninger"
-date: "01 7 2022"
-output:
-  html_document: default
-  pdf_document: default
+date: "7 7 2022"
+output: 
+  bookdown::html_document2:
+    fig_caption: yes
+  bookdown::pdf_document2:
+    fig_caption: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(knitr)
-library(kableExtra)
-require(gridExtra)
 library(plotly)
 library(scales)
-library(GGally)
-library(reshape2)
-library(car)
-library(rgl)
 library(ggplot2)
-require("glmnet")
-library("corrplot")
+library(viridis)
+library(reshape2)
+library("ggbiplot")
 
 ```
 
-## What influences Happiness?
-Can happiness be explained by certain factors?
-What are those factors and how much do they influence the happiness?
-For this questions we need the raw values to build our analysis on top.
-To answer this questions we decided to add additional factors which might explain the different happiness levels.
-We were interested in how drug abuse correlates with happiness and found suiting datasets for alcohol consumption and tabaco consumtion.
-Additionally we were intereseted in how the modern user of social media influeces happiness. However we only found a fitting internet dataset which captures the percentage of the individuals in a country which is using the Internet.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+data_2018 <- read.csv(file = './data/preprocessed_raw_2018_no_nan.csv')
+colnames(data_2018)[6] <- "Social"
+colnames(data_2018)[11] <- "Positive"
+colnames(data_2018)[12] <- "Negative"
+correlation_categories <- c("Happiness","Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet")
+
+not_scaled_data_factors <- data.frame(data_2018[,correlation_categories])
+scaled_data_factors <- data.frame(scale(data_2018[,correlation_categories]))
+```
+
+# Design choices
+
+This Report goes into the specific design choices of the PCA- and Bi-plot. I tried to group the related topics into sub chapters and therefore make it easier to follow along. To start of here is the final PCA and Biplot. The two plots are event prettier when opened from the svg file. [pca](./figs/pca_legend_reverse.svg) and [biplot](./figs/biplot_legend_reverse.svg)
+
+```{r pca, echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE, fig.cap="pca plot"}
+
+correlation_categories_without_happy <- c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol",
+                                          "Population","Tobacco","Internet")
+
+pca <- prcomp(scaled_data_factors[,correlation_categories_without_happy])
+
+pc1_exp <- round((pca$sdev[1]^2/ sum(pca$sdev^2))*100,2)
+pc2_exp <- round((pca$sdev[2]^2/ sum(pca$sdev^2))*100,2)
+
+happiness_category <- round(not_scaled_data_factors$Happiness)
+region_category <- as.factor(data_2018$Region)
+
+pca_plot_data <- data.frame(pca$x[,1:2])
+pca_plot_data$happiness <- as.factor(happiness_category)
+pca_plot_data$code <- data_2018$Code
+pca_plot <- ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=code ))+
+  scale_color_viridis(end = 0.95, discrete=TRUE) +
+  geom_point(size=14,shape=16) +
+  geom_text(hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
+  ggforce::geom_mark_ellipse(inherit.aes = FALSE ,aes(x=PC1, y=PC2, group = happiness, color = happiness,  label = happiness)
+                             , tol = 0.001, alpha=0.1) +
+  xlab(paste("PC1: ", pc1_exp, "%")) +
+  ylab(paste("PC2: ", pc2_exp, "%")) +
+  theme_minimal() +
+  geom_hline(yintercept=0, linetype="dashed", color = "black", size = 0.8)+
+  geom_vline(xintercept=0, linetype="dashed", color= "black", size = 0.8)+
+  ggtitle("PCA Colored By Happiness") +
+  theme(axis.title.y = element_text(size = 18, family = "sans"),
+        legend.position = "right",
+        legend.title = element_text(size = 12, family = "sans"),
+        axis.text.x = element_text(colour ="black", size = 16, family = "sans"),
+        axis.text.y = element_text(colour ="black", size = 16, family = "sans"),
+        axis.title.x = element_text(colour = "black", size = 18, family = "sans"),
+        panel.background = element_blank(),
+        plot.title = element_text(size = 32, family = "sans", margin=margin(b = 20, unit = "pt")),
+        plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
+        ) +
+    guides(colour = guide_legend(reverse=T, title="Happiness- \n score"))
+pca_plot
+```
+
+```{r biplot, echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE, fig.cap="biplot"}
+
+biplot <-ggbiplot(pca, obs.scale=1, var.scale=1, groups=as.factor(happiness_category),  circle=TRUE) +
+  scale_color_viridis(end = 0.95, discrete=TRUE) +
+  geom_point(aes(colour=as.factor(happiness_category)), size = 12, shape=16) + #plotting over to increase the point size
+  geom_text(aes(label=pca_plot_data$code),hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
+  theme_minimal() +
+  geom_hline(yintercept=0, linetype="dashed", color = "black", size = 0.8)+
+  geom_vline(xintercept=0, linetype="dashed", color= "black", size = 0.8)+
+  ggtitle("Biplot Colored By Happiness") +
+  theme(axis.title.y = element_text(size = 18, family = "sans"),
+        legend.position = "right",
+        legend.title = element_text(size = 12, family = "sans"),
+        axis.text.x = element_text(colour ="black", size = 16, family = "sans"),
+        axis.text.y = element_text(colour ="black", size = 16, family = "sans"),
+        axis.title.x = element_text(colour = "black", size = 18, family = "sans"),
+        panel.background = element_blank(),
+        plot.title = element_text(size = 32, family = "sans", margin=margin(b = 20, unit = "pt")),
+        plot.margin = margin(0.5,0.5,0.5,0.5, "cm")
+  ) +
+  guides(colour = guide_legend(reverse=T, title="Happiness- \n score"))
+biplot
+
+```
+
+## Data Preparation
+
+The goal for coloring the PCA plot was to color it by the happiness score. But to make the separation clearer, i decided to round the happiness scores and thereby create so called "happiness groups". By using now the happiness groups for coloring, i can use a discrete color scale and that makes it easier to see a separation for the different countries.
+
+I also not only wanted the color countries as dots, i also wanted to add the name of the country. Through it, the plot is way more informative. You are not only able to spot some discrepancies, you can directly see which countries that are. I started by plotting the country names, however they can be really long e.g. "Bosnia and Herzegovina" and thereby make the visualization to crowded and unclear. That is why i decided to plot not the full names, instead i am plotting now the country codes. As they were not in the raw dataset, i had to add them in the [preprocessing](./preprocessing.ipynb) step.
+
+After adding the country code, the plot was better, however by having a dot and a separate text label, the color indication was quite small (see in \@ref(fig:tryout1)). That is why i decided to overlap the country code label and the color dot. Thereby the color indication in the plot is way better (see in \@ref(fig:pca)). I then changed the color of the country code to white, thereby the code is still readable for dark colored points.  
+```{r tryout1, fig.height=8, fig.width=10, echo=FALSE, message=FALSE, fig.cap="dot and county code"}
+#figures-side, fig.show="hold", out.width="50%"
+correlation_categories_without_happy <- c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet")
+
+pca <- prcomp(scaled_data_factors[,correlation_categories_without_happy])
+
+pc1_exp <- round((pca$sdev[1]^2/ sum(pca$sdev^2))*100,2)
+pc2_exp <- round((pca$sdev[2]^2/ sum(pca$sdev^2))*100,2)
+
+happiness_category <- round(not_scaled_data_factors$Happiness)
+
+region_category <- as.factor(data_2018$Region)
+
+coolwarm_hcl <- colorspace::diverging_hcl(100,h = c(250, 10), c = 100, l = c(37, 88), power = c(0.7, 1.7))
+plot(pca$x, xlab= paste("PC1: ", pc1_exp, "%") , ylab= paste("PC2: ", pc2_exp,"%"),    pch=16,col =happiness_category) #type="n", 
+text(pca$x[,1],pca$x[,2]-0.1, labels =data_2018$Code, cex=0.6)
+legend("topright", legend=sort(unique(happiness_category), decreasing = TRUE), pch=16,col = sort(unique(happiness_category), decreasing = TRUE))
+```
 
 
-## PCA and Biplot
+## Color Scale
 
-Die Hauptkomponentenanalyse geht von der Annahme aus, dass es bei stark korrelierten Größen eine dritte Größe gibt, die nicht direkt messbar ist und die hinter diesen korrelierten Variablen steht und sich quasi in ihnen äußert. Das bedeutet, die messbaren Größen sind nur eine andere Erscheinungsform von Größen, die im Hintergrund stehen und nicht direkt gemessen werden können. Man nennt diese im Hintergrund stehenden Größen Hauptkomponenten (Principal Components), Latent Variables oder Faktoren. Ziel der Hauptkomponentenanalyse ist es, solche Hintergrundgrößen bzw. Faktoren aus den gemessenen Daten zu ermitteln und die beobachteten Zusammenhänge möglichst vollständig zu erklären. Mit Hilfe der Hauptkomponentenanalyse lassen sich demzufolge komplexe Informationen auf nur wenige, orthogonale Informationen verdichten.
+After deciding on how to plot a country point, i was thinking about what color palette to use. I decided to go with the [viridis color maps](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html). The choice of colors is well thought-out and I can recommend the [video behind](https://www.youtube.com/watch?v=xAoljeRJ3lU) it.
+These color maps are designed to be:
 
-Die Hauptkomponentenanalyse bestimmt die Faktoren nach rein mathematischen Gesichtspunkten. Da der erste Faktor immer in die Richtung der maximalen Varianz in den Daten zeigt, werden dadurch die real gemessen Informationen am besten repräsentiert.
+* **Colorful**, spanning as wide a palette as possible so as to make differences easy to see,
+* **Perceptually uniform**, meaning that values close to each other have similar-appearing colors and values far away from each other have more different-appearing colors, consistently across the range of values,
+* **Robust to colorblindness**, so that the above properties hold true for people with common forms of colorblindness, as well as in grey scale printing, and
+* **Pretty**, oh so pretty
 
+I decided not to go for the full range of color palette. As I needed 6 discrete colors (for each happiness class one), the default 6 were not optimal. The default brightest color "yellow" was to bright for my taste and hard to see in front of a white background. That is why i decided to leave out the brightest 5 % (end = 0.95). That way a got 6 different discrete colors from the palette which are better to see.
 
-sing a sample of six hundred participants, linear regression model was fitted and collinearity between predictors was detected using Variance Inflation Factor (VIF). After confirming the existence of high relationship between independent variables, the principal components was utilized to find the possible linear combination of variables that can produce large variance without much loss of information. Thus, the set of correlated variables were reduced into new minimum number of variables which are independent on each other but contained linear combination of the related variables. In order to check the presence of relationship between predictors, dependent variables were regressed on these five principal components. The results show that VIF values for each predictor ranged from 1 to 3 which indicates that multicollinearity problem was eliminated.
+## Ellipse, Area of Happiness
 
-For the PCA we are using the scaled factors without the happiness score. The first two PCs explain 59.01 % of the variation together.
+Next up i wanted to add an additional ellipses, to indicate the area of each happiness category in the PCA plot. I saw that from another package (see in \@ref(fig:inspiration1)).
 
-PC1 explains 39.07 % of the variation and the coefficients are the following:
+```{r inspiration1, echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE, fig.cap="inspiration for ellipse"}
+library("FactoMineR")
+library("factoextra")
+res.pca <- PCA(scaled_data_factors[,correlation_categories_without_happy], graph = FALSE)
 
- $$PC1=-0.415*Economy+-0.397*Social+-0.395*Health+-0.174*Freedom+0.192*Corruption \\
- +0.115*Generosity+-0.182*Positive+0.317*Negative+0.132*Government+-0.289*Alcohol \\
- +0.069*Population+-0.164*Tobacco+-0.411*Internet$$
+fviz_pca_ind(res.pca,
+             geom.ind = "point", # show points only (nbut not "text")
+             col.ind = as.factor(happiness_category), # color by groups
+             palette = c("#00AFBB", "#E7B800", "#FC4E07","#00AFBB", "#E7B800", "#FC4E07"),
+             addEllipses = TRUE, # Concentration ellipses
+             legend.title = "Groups"
+             )
 
-The first PCA plot colored by the rounded happiness scores, clusters the countries quite good.
-For low values on PC1 and PC2 we the really high happiness scores. The top 3 countries for 2018 (Finland, Denmark and Switzerland) are all in that region.
-Also interestting is that most of the countries in the lower left are from 'Western Europe', expecpt of 'New Zealand', 'Australia' and 'Canada' with are from 'North America and ANZ'.
-When we move from left to right, the happiness scores decrease. The values 8,7,6,5,4 are quite good seperated. An exeption is the happiness category of 3. They are spread out on the right half side of the plot.   
+```
 
+However, I didn't like the ellipses fully filled out. For my taste that is too irritating and overwhelming and you can not see the country codes that well anymore. It would distract from the individual data points. I find it also sub optimal, that they use the same colors multiple times (confusing) and encode it additionally with shapes. Encoding the same information twice doesn't bring value and is confusing. But i liked the key idea of giving the area where each category is.
 
-
-
-An interesting outlier ist Benin (BEN) on the middle right. Benin belongs to the happiness category 6 but is on the verry right side.
-Another outlier ist Botswana (BWA) which belongs to the happiness category 3 but is in the verry middle.
-
-
-
-With the coefficients and the 
-
-coefficients 
-
-
-
- 
-PC2 explains 19.94% of the variation and the coefficients are the following:
- 
-  $$PC2=0.059*Economy+0.014*Social+0.054*Health+-0.478*Freedom+0.388*Corruption \\
-  +-0.396*Generosity+-0.384*Positive+0.108*Negative+-0.467*Government+0.054*Alcohol \\
-  +-0.078*Population+0.246*Tobacco+0.103*Internet$$
-```{r}
+I tried to create my own ellipses by using the standard ggplot way (stat_ellipse). That method however, doesn't draw ellipses for only 3 data points. That is quite a problem for me as therefore no ellipses were drawn for category 8 and 3 (see in \@ref(fig:ellipsetry)).
+```{r ellipsetry, echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE, fig.cap="Ellipse tryout with ggplot"}
 
 ggdat <-  data.frame(X=pca$x[,1],Y=pca$x[,2])
 #ggdat$indiv_id <- as.factor(ggdat$indiv_id)
@@ -91,69 +180,23 @@ ggplot(ggdat) +
 ```
 
 
+Therefore i had to use a different package to draw the ellipses (ggforce::geom_mark_ellipse). 
+I wanted to have the lines of the ellipses very thin as we thereby can read the country codes still quite good. Additionally, I decided to include the labels for the ellipses to make the pca plot even clearer.
 
-  
- 
-```{r}
-library("FactoMineR")
-library("factoextra")
-res.pca <- PCA(scaled_data_factors[,correlation_categories_without_happy], graph = FALSE)
-fviz_pca_var(res.pca, col.var = "contrib",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07")
-             )
-#corrplot(var$cos2, is.corr=FALSE)
-fviz_pca_ind(res.pca,
-             geom.ind = "point", # show points only (nbut not "text")
-             col.ind = as.factor(happiness_category), # color by groups
-             palette = c("#00AFBB", "#E7B800", "#FC4E07","#00AFBB", "#E7B800", "#FC4E07"),
-             addEllipses = TRUE, # Concentration ellipses
-             legend.title = "Groups"
-             )
+## Separate Biplot
 
-```
-```{r}
+I saw in other packages that they give also the possibility to include the correlations of the variables (biplot) in the same plot as well (see in \@ref(fig:inspiration2)). However i think that is to distracting. Especially after i added the ellipses, because then the unit circle would be another "ellipse" and that is really confusing, and hard to distinguish. Therfore i decided to make a separate biplot, without the ellipses included (see in \@ref(fig:biplot)).
+
+```{r inspiration2, echo=FALSE, fig.height=16, fig.width=20, message=FALSE, warning=FALSE, fig.cap="inspiration for separate biplot"}
 library(ggbiplot)
 
 #rownames(wine.pca$rotation) <- rep("my_names", length(wine.pca$center))
 print(ggbiplot(pca, obs.scale = 1, var.scale = 1, groups = happiness_category, ellipse = TRUE, circle = TRUE))
 ```
 
- 
- 
-```{r fig.height=8, fig.width=10, echo=FALSE, message=FALSE}
-#figures-side, fig.show="hold", out.width="50%"
-correlation_categories_without_happy <- c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet")
+I also created a visualization to show the coefficients and their correlations to the PC1 and PC2 in a different format at the same time. Because in the biplot you cannot see the coefficients of the PCs. The biplot alternative \@ref(fig:biplot2) shows the coefficients for the factors in PC1 (red) and PC2 (blue) in **100% color** and the correlation of the factors to PC1 (red) and PC2 (blue) in **alpha=.2**. However, i decided to only show the biplot in the presentation as it is easier to understand.
 
-par(mar = c(4, 4, .1, .1))
-pca <- prcomp(scaled_data_factors[,correlation_categories_without_happy])
-pca$rotation[,1:2]
-
-pc1_exp <- round((pca$sdev[1]^2/ sum(pca$sdev^2))*100,2)
-pc2_exp <- round((pca$sdev[2]^2/ sum(pca$sdev^2))*100,2)
-
-happiness_category <- round(not_scaled_data_factors$Happiness)
-
-region_category <- as.factor(data_2018$Region)
-
-coolwarm_hcl <- colorspace::diverging_hcl(100,h = c(250, 10), c = 100, l = c(37, 88), power = c(0.7, 1.7))
-plot(pca$x, xlab= paste("PC1: ", pc1_exp, "%") , ylab= paste("PC2: ", pc2_exp,"%"),    pch=16,col =happiness_category) #type="n", 
-text(pca$x[,1],pca$x[,2]-0.1, labels =data_2018$Code, cex=0.6)
-legend("topright", legend=sort(unique(happiness_category), decreasing = TRUE), pch=16,col = sort(unique(happiness_category), decreasing = TRUE))
-
-
-plot(pca$x, xlab= paste("PC1: ", pc1_exp, "%") , ylab= paste("PC2: ", pc2_exp,"%"), pch=16, col =region_category)
-text(pca$x[,1],pca$x[,2]-0.1, labels =data_2018$Code, cex=0.6)
-legend("topright", legend=unique(region_category), pch=16,col = unique(region_category) )
-```
-```{r echo=FALSE, fig.height=7, fig.width=9, message=FALSE, warning=FALSE}
-transformed_data <- pca$x
-biplot( pca,xlab= paste("PC1: ", pc1_exp, "%"), ylab= paste("PC2: ", pc2_exp, "%"),asp=1, )
-#symbols( )
-legend("topright", legend=unique(happiness_category), pch=16,col = unique(happiness_category) )
-
-
-```
-```{r echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
+```{r biplot2, echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE, fig.cap="biplot alternative"}
 pca_corr <- cor(scaled_data_factors[,correlation_categories_without_happy],pca$x)
 
 
@@ -178,117 +221,17 @@ ggplot(pc_coef_corr) +
        geom_bar(aes(factor, correlation, fill=PC),stat="identity",position="dodge",alpha=.2) +
        geom_bar(aes(factor, coefficient, fill=PC),stat='identity',position="dodge")
        
-       
 pc_coef_corr
-      # geom_bar(aes(x = as.integer(School) + .2, y= Percent - .5),stat = "identity", alpha=.2,width = 0.6)
-
-
-
 ```
 
 
+## Labels, Ledgend etc.
 
-```{r}
-#figures-side, fig.show="hold", out.width="50%"
-correlation_categories_without_happy <- c("Economy","Social","Health","Freedom","Corruption","Generosity","Positive","Negative","Government","Alcohol","Population","Tobacco","Internet")
+Next i added the labels of the PCs including their explained part of the variance. Thus, the reader can see how good the dimension reduction to two dimensions worked. Next i added a zero horizontal and zero vertical dotted line. This helps to find/see the center of the PCA plot way faster. Then I added the title so that the reader knows what is in the plot. However i found the default placement to close to the figure. That is why i added some space between the title and the figure, which is way more visually pleasing. 
+Next i added the legend and placed it on the right side. I changed the order of the legend items from the default (3,4,5,6,7,8) to (8,7,6,5,4,3). This is way more comprehensible and intuitive, as a high happiness category is better than a lower one. I also added a legend title. As "Happiness score" was to taking to much horizontal space, i forced a manual line break by setting the title to "Happiness- \\\ n score".
 
-par(mar = c(4, 4, .1, .1))
-pca <- prcomp(scaled_data_factors[,correlation_categories_without_happy])
-pca$rotation[,1:2]
+After that i changed the theme to minimal, as it looks nicer and cleaner in my opinion. Additionally i also made sure, that all labels are using the same font. I therefore set the font to "sans".
 
-pc1_exp <- round((pca$sdev[1]^2/ sum(pca$sdev^2))*100,2)
-pc2_exp <- round((pca$sdev[2]^2/ sum(pca$sdev^2))*100,2)
+## Saving The Plot
 
-happiness_category <- round(not_scaled_data_factors$Happiness)
-
-region_category <- as.factor(data_2018$Region)
-
-p2 <- ggplot(newdata, aes(Health, Happiness, colour = Region)) +
-  geom_point(alpha = 0.9, show.legend = FALSE, size = 2) +
-  scale_colour_manual(values = rainbow(10))
-
-
-pal <- function(n) viridis(n)
-plot(happy_SOM_model, shape="straight", palette.name=pal(10))
-
-
-pca_plot_data <- data.frame(pca$x[,1:2])
-pca_plot_data$happiness <- as.factor(happiness_category)
-pca_plot_data$code <- data_2018$Code
-
-plot(pca$x, xlab= paste("PC1: ", pc1_exp, "%") , ylab= paste("PC2: ", pc2_exp,"%"),    pch=16,col =happiness_category, ) #type="n", 
-text(pca$x[,1],pca$x[,2]-0.1, labels =data_2018$Code, cex=0.6)
-legend("topright", legend=sort(unique(happiness_category), decreasing = TRUE), pch=16,col = sort(unique(happiness_category), decreasing = TRUE))
-
-
-require(ggalt)
-
-ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=code ))+
-  scale_color_viridis(discrete=TRUE) +
-  geom_point(size=14,shape=16) +
-  geom_text(hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
-  stat_ellipse(aes(x=PC1, y=PC2, color=happiness, group=happiness),type = "norm",size=2) +
-  xlab(paste("PC1: ", pc1_exp, "%")) +
-  ylab(paste("PC2: ", pc2_exp, "%"))
-
-
-
-
-ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=code ))+
-  scale_color_viridis(discrete=TRUE) +
-  geom_point(size=14,shape=16) +
-  geom_text(hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
-  #stat_ellipse(aes(x=PC1, y=PC2, color=happiness, group=happiness),type = "norm",size=2) +
-  geom_encircle(aes(group=happiness), color="black")+ 
-  xlab(paste("PC1: ", pc1_exp, "%")) +
-  ylab(paste("PC2: ", pc2_exp, "%"))
-
-
-
-scale_color_viridis()
-
-
-ggplot(pca_plot_data, aes(x= PC1, y= PC2, colour=happiness, label=code ))+
-  scale_color_viridis(end = 0.95, discrete=TRUE) +
-  geom_point(size=14,shape=16) +
-  geom_text(hjust=+0.5, vjust=+0.5, size=4, show.legend = FALSE, col="white") +
-  ggforce::geom_mark_ellipse(inherit.aes = FALSE ,aes(x=PC1, y=PC2, group = happiness, color = happiness,  label = happiness)
-                             , tol = 0.001, alpha=0.1) +
-  xlab(paste("PC1: ", pc1_exp, "%")) +
-  ylab(paste("PC2: ", pc2_exp, "%")) +
-
-  guides(colour=guide_legend(title="Happiness- \n score")) +
-  theme_minimal() +
-  geom_hline(yintercept=0, linetype="dashed", color = "black", size = 0.8)+
-  geom_vline(xintercept=0, linetype="dashed", color= "black", size = 0.8)+
-  ggtitle("PCA colored by happiness") +
-  theme(axis.title.y = element_text(size = 18, family = "sans"),
-        legend.position = "right",
-    
-        legend.title = element_text(size = 12, family = "sans"),
-        axis.text.x = element_text(colour ="black", size = 16, family = "sans"),
-        axis.text.y = element_text(colour ="black", size = 16, family = "sans"),
-        axis.title.x = element_text(colour = "black", size = 18, family = "sans"),
-        #legend.title = element_blank(),
-        panel.background = element_blank(),
-       # axis.line = element_blank(),
-        plot.title = element_text(size = 20, family = "sans", margin=margin(b = 20, unit = "pt")),
-        plot.margin = margin(0.5,0.5,0.5,0.5, "cm"),
-        #legend.text.align = 0,
-       # legend.key = element_rect(fill = "white", colour = "white"),
-        
-       # legend.key.size = unit(1, 'cm'), #change legend key size
-        #     legend.key.height = unit(1, 'cm'), #change legend key height
-         #    legend.key.width = unit(1, 'cm')
-        
-        )
-  
-
-
-    
-
-
-
-```
-
-
+For the last step I wanted to make sure that the visualization is saved in a high resolution in the format "svg". Therefore the points are well separated, and still clearly to read. It also allows to zoom in and not get pixeled points. I also thought about making the plot interactive (ggplotly), but i couldn't think of a good reason to make it interactive. Therefore i choose to leave it non-interactive, as it wouldn't had added any benefit.
