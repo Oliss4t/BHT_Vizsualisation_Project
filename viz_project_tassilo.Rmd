@@ -1,5 +1,6 @@
 ---
-title: Vizualization on the Happines Dataset including Tabacco, Alcohole and Internet consumption
+title: Visualization on the Happiness Dataset including Tabacco, Alcohol and Internet
+  consumption
 subtitle: Design choices for the PCA-Plot and Biplot
 author: "Tassilo Henninger"
 date: "7 7 2022"
